@@ -1,5 +1,5 @@
-const CACHE = 'leadctrl-v2.0';
-const ASSETS = ['./','./index.html','./styles.css','./theme-v2.css','./app.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
+const CACHE = 'leadctrl-v3.0';
+const ASSETS = ['./','./index.html','./styles.css','./theme-v2.css','./theme-v3.css','./app.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
