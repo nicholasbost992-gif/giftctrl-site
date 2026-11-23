@@ -10,11 +10,29 @@ const items=[
   ['Retro Console',14200,'🎮'],['Gold Coin',9600,'🪙'],['Mystery Safe',2200,'💎'],
   ['Sports Coupe',10500,'🚘']
 ];
-const BASE_BID_TIME=30000,REVEAL_TIME=6000,MIN_RAISE=100;
+const BASE_BID_TIME=24000,REVEAL_TIME=4700,MIN_RAISE=100,APPRAISAL_COST=300;
+const quality=[
+ {label:'ROUGH',factor:[0.32,0.64],notes:['SOLD AS-IS · May need work','SELLER NOTE · Condition is uncertain','COLLECTOR NOTE · Some parts look worn']},
+ {label:'USED',factor:[0.68,1.05],notes:['SELLER NOTE · Normal wear visible','INSPECTOR NOTE · Appears complete','SELLER NOTE · Previously owned and maintained']},
+ {label:'PRISTINE',factor:[1.07,1.62],notes:['COLLECTOR NOTE · Excellent condition','INSPECTOR NOTE · Exceptional preservation','SELLER NOTE · Scarce edition claimed']}
+];
+function makeLots(){
+ return [...items].sort(()=>Math.random()-.5).slice(0,5).map(([name,base,emoji])=>{
+  const q=quality[Math.floor(Math.random()*quality.length)];
+  const value=Math.max(100,Math.round(base*(q.factor[0]+Math.random()*(q.factor[1]-q.factor[0]))/100)*100);
+  return {name,value,emoji,clue:q.notes[Math.floor(Math.random()*q.notes.length)],condition:q.label};
+ });
+}
+function estimate(value){
+ const variance=0.13+Math.random()*0.07;
+ const low=Math.max(0,Math.floor(value*(1-variance)/100)*100);
+ const high=Math.ceil(value*(1+variance)/100)*100;
+ return {low,high};
+}
 function showMoney(n){return '$'+n.toLocaleString('en-US')}
 function room(priv){
  const code=crypto.randomBytes(3).toString('hex').toUpperCase();
- const r={code,priv,players:[],round:0,phase:'wait',lots:[...items].sort(()=>Math.random()-.5).slice(0,5),
+ const r={code,priv,players:[],round:0,phase:'wait',lots:makeLots(),
   highBid:0,leader:null,bidCount:0,endsAt:0,extensions:0,result:null,bot:false,botTimer:null,timer:null};
  rooms.set(code,r);return r;
 }
@@ -25,7 +43,8 @@ function emit(r){
    code:r.code,phase:r.phase,round:r.round+1,
    players:r.players.map(x=>({id:x.id,name:x.name,cash:x.cash,collection:x.collection})),
    you:p.id,
-   lot:r.phase==='bid'?{name:r.lots[r.round][0],emoji:r.lots[r.round][2]}:null,
+   lot:r.phase==='bid'?{name:r.lots[r.round].name,emoji:r.lots[r.round].emoji,clue:r.lots[r.round].clue,condition:r.lots[r.round].condition}:null,
+   appraisal:p.appraisals?.[r.round]||null,scansRemaining:p.scans||0,appraisalCost:APPRAISAL_COST,
    highBid:r.highBid,leader:r.leader,leaderName:currentLeader?currentLeader.name:null,
    bidCount:r.bidCount,minBid:r.highBid+MIN_RAISE,
    endsAt:r.endsAt,result:r.result
@@ -34,7 +53,7 @@ function emit(r){
 }
 function join(s,r,name){
  if(r.players.length>=2)return s.emit('errorMessage','Room full');
- const p={id:s.id,name:String(name||'Player').trim().slice(0,18)||'Player',cash:10000,collection:0};
+ const p={id:s.id,name:String(name||'Player').trim().slice(0,18)||'Player',cash:10000,collection:0,scans:2,appraisals:{}};
  r.players.push(p);s.data.room=r.code;s.join(r.code);emit(r);
  if(r.players.length===2)start(r);
 }
@@ -66,7 +85,7 @@ function start(r){
  r.endsAt=Date.now()+BASE_BID_TIME;
  const bot=r.players.find(p=>p.id==='bot');
  if(bot)r.botCeiling=Math.min(bot.cash,Math.max(100,Math.round(
-    r.lots[r.round][1]*(0.60+Math.random()*0.55)/100)*100));
+    r.lots[r.round].value*(0.45+Math.random()*0.85)/100)*100));
  emit(r);scheduleRoundEnd(r);scheduleBot(r);
 }
 function placeBid(r,player,n){
@@ -86,8 +105,8 @@ function resolve(r){
  clearTimeout(r.timer);clearTimeout(r.botTimer);r.botTimer=null;
  const w=r.players.find(p=>p.id===r.leader)||null;
  const price=w?r.highBid:0;
- if(w){w.cash-=price;w.collection+=r.lots[r.round][1];}
- r.result={winner:w?.name||'Nobody',price,value:r.lots[r.round][1],item:r.lots[r.round][0]};
+ if(w){w.cash-=price;w.collection+=r.lots[r.round].value;}
+ r.result={winner:w?.name||'Nobody',winnerId:w?.id||null,price,value:r.lots[r.round].value,item:r.lots[r.round].name,profit:r.lots[r.round].value-price,condition:r.lots[r.round].condition};
  r.phase='reveal';r.endsAt=Date.now()+REVEAL_TIME;emit(r);
  r.timer=setTimeout(()=>{r.round++;start(r)},REVEAL_TIME);
 }
@@ -95,7 +114,7 @@ io.on('connection',s=>{
  s.on('solo',name=>{
   if(s.data.room)return;
   const r=room(true);r.bot=true;join(s,r,name);
-  r.players.push({id:'bot',name:'OUTBID BOT',cash:10000,collection:0});start(r);
+  r.players.push({id:'bot',name:'OUTBID BOT',cash:10000,collection:0,scans:0,appraisals:{}});start(r);
  });
  s.on('find',name=>{
   if(s.data.room)return;
@@ -118,6 +137,36 @@ io.on('connection',s=>{
   if(!p)return;
   const outcome=placeBid(r,p,n);
   if(outcome.error)s.emit('errorMessage',outcome.error);
+ });
+ s.on('appraise',()=>{
+  const r=rooms.get(s.data.room);
+  if(!r||r.phase!=='bid'||Date.now()>=r.endsAt)return s.emit('errorMessage','Appraisal unavailable');
+  const p=r.players.find(x=>x.id===s.id);
+  if(!p)return;
+  if(p.appraisals[r.round])return s.emit('errorMessage','You already scanned this lot');
+  if(p.scans<=0)return s.emit('errorMessage','No appraisals remaining');
+  if(p.cash<APPRAISAL_COST)return s.emit('errorMessage','Not enough cash for an appraisal');
+  p.cash-=APPRAISAL_COST;p.scans--;
+  p.appraisals[r.round]=estimate(r.lots[r.round].value);
+  emit(r);
+ });
+ s.on('videoReady',()=>{
+  const r=rooms.get(s.data.room);
+  if(!r||r.players.length!==2)return;
+  const other=r.players.find(p=>p.id!==s.id&&p.id!=='bot');
+  if(other)io.to(other.id).emit('videoReady');
+ });
+ s.on('videoStopped',()=>{
+  const r=rooms.get(s.data.room);
+  if(!r)return;
+  const other=r.players.find(p=>p.id!==s.id&&p.id!=='bot');
+  if(other)io.to(other.id).emit('videoStopped');
+ });
+ s.on('report',data=>{
+  const r=rooms.get(s.data.room);
+  if(!r||!r.players.some(p=>p.id===s.id))return;
+  console.warn('OUTBID report received',JSON.stringify({time:new Date().toISOString(),room:r.code,reporter:s.id,reason:String(data?.reason||'video').slice(0,40)}));
+  s.emit('reported');
  });
  s.on('chat',message=>{
   const r=rooms.get(s.data.room);
