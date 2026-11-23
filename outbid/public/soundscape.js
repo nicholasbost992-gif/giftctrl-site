@@ -93,6 +93,7 @@ function playStep(index,t){
 }
 function scheduler(){
  if(!musicOn||!audioCtx||audioCtx.state!=='running')return;
+ if(nextBeatAt<audioCtx.currentTime-.25)nextBeatAt=audioCtx.currentTime+.03;
  while(nextBeatAt<audioCtx.currentTime+.20){
   playStep(step,nextBeatAt);
   nextBeatAt+=STEP_SECONDS;step++;
@@ -164,9 +165,11 @@ function playGameSfx(kind){
 }
 // Legacy calls from game code use a short confirmation chime; keep compatibility.
 function playAccent(){playGameSfx('click')}
+document.addEventListener('DOMContentLoaded',()=>{
 $('musicToggle').addEventListener('click',toggleMusic);
 $('effectsToggle').addEventListener('click',toggleEffects);
 $('musicVolume').addEventListener('input',e=>{volume=Math.max(0,Math.min(1,Number(e.target.value)/100));syncAudioGains();syncAudioControls()});
 $('gameSoundButton').addEventListener('click',toggleMusic);
 $('homeSoundButton').addEventListener('click',toggleMusic);
 syncAudioControls();
+});
