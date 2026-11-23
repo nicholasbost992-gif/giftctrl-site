@@ -146,6 +146,8 @@ async function enableCamera(){
  if(cameraStream)return;
  if(!navigator.mediaDevices?.getUserMedia){videoStatus('Camera unavailable in this browser. Button bidding still works.');notice('Your browser does not support camera capture.');return}
  $('startCamera').disabled=true;$('startCamera').textContent='STARTING CAMERA…';
+ // iOS's media-playback session can block microphone capture; change before getUserMedia.
+ setAudioCaptureMode(true);
  try{
   let stream;
   try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480},frameRate:{ideal:18,max:25}},audio:{echoCancellation:true,noiseSuppression:true}})}
@@ -154,6 +156,7 @@ async function enableCamera(){
    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
   }
   cameraStream=stream;localCameraEnabled=stream.getVideoTracks().some(t=>t.enabled);localMicEnabled=stream.getAudioTracks().some(t=>t.enabled);
+  setAudioCaptureMode(stream.getAudioTracks().length>0);
   meVideo.srcObject=stream;await meVideo.play().catch(()=>{});
   $('lobbyVideo').srcObject=stream;await $('lobbyVideo').play().catch(()=>{});
   videoStatus('Camera enabled. Raise an open hand high in the frame, then lower it between bids. Other players can screen-record.');
@@ -165,6 +168,7 @@ async function enableCamera(){
   else{gestureEnabled=false;updateCameraControls();videoStatus('Camera is live. Hand tracker unavailable; use the bid button.')}
   setMusicDucking(true);
  }catch(e){
+  setAudioCaptureMode(false);
   if(e.name==='NotAllowedError')videoStatus('Camera permission denied. You can still bid with the button.');
   else videoStatus('Could not start camera: '+e.message);
   notice('CAMERA NOT AVAILABLE — BUTTON BIDDING WORKS');
@@ -181,6 +185,7 @@ window.stopOutbidLobbyCamera=function(){
  setMusicDucking(false);
  meVideo.srcObject=null;$('lobbyVideo').srcObject=null;
  if(videoPeer)stopPeer('Camera off');
+ setAudioCaptureMode(false);
  updateCameraControls();
 };
 $('lobbyCameraButton').addEventListener('click',async()=>{
@@ -190,6 +195,7 @@ $('lobbyCameraButton').addEventListener('click',async()=>{
  setMusicDucking(false);
  meVideo.srcObject=null;$('lobbyVideo').srcObject=null;
  if(videoPeer)stopPeer('Camera turned off.');
+ setAudioCaptureMode(false);
  updateCameraControls();
 });
 $('startCamera').addEventListener('click',enableCamera);
@@ -267,6 +273,7 @@ $('reportMatch').addEventListener('click',()=>{
 otherVideo.addEventListener('click',()=>otherVideo.play().catch(()=>{}));
 window.addEventListener('pagehide',()=>{
  if(cameraStream)cameraStream.getTracks().forEach(t=>t.stop());
+ setAudioCaptureMode(false);
  setMusicDucking(false);
  if(videoPeer)videoPeer.close();
 });
