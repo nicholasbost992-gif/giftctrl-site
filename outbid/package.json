@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "check": "node --check server.js && node --check public/app.js && node --check tests/smoke.js && node tests/smoke.js",
+    "check": "node --check server.js && node --check public/app.js && node --check tests/smoke.js && node --check tests/auction-integration.js && node tests/smoke.js && node tests/auction-integration.js",
     "postinstall": "npm run check",
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.21.2",
     "socket.io": "^4.8.1",
-    "stripe": "^17.7.0"
+    "stripe": "^17.7.0",
+    "socket.io-client": "^4.8.1"
   }
 }
