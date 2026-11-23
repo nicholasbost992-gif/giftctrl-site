@@ -95,21 +95,31 @@ function render(){
  $('itemName').textContent=phase==='wait'?'Waiting for your opponent':phase==='left'?'Match ended':phase==='done'?'Auction complete':item;
  setArtwork(phase==='wait'||phase==='left'||phase==='done'?null:item);
  $('resultPanel').classList.toggle('hidden',phase!=='reveal'&&phase!=='done'&&phase!=='left');
- const canBid=phase==='bid'&&!r.submitted&&!lockedLocally;
+ const isLeading=phase==='bid'&&r.leader===r.you;
+ const highBid=Number(r.highBid)||0,minimum=Number(r.minBid)||highBid+100,cash=you?.cash||0;
+ const canBid=phase==='bid'&&!isLeading&&!lockedLocally&&minimum<=cash;
+ $('highestBid').textContent=money(highBid);
+ $('bidLeader').textContent=r.leaderName?(isLeading?'YOU':r.leaderName.toUpperCase()):'NO BIDS YET';
+ $('bidLeader').classList.toggle('my-lead',isLeading);
  $('amount').disabled=!canBid;
  $('bidbutton').disabled=!canBid;
  document.querySelectorAll('.quick-bids button').forEach(b=>b.disabled=!canBid);
- $('yourCashHint').textContent='AVAILABLE '+money(you?.cash||0);
- $('amount').max=String(you?.cash||0);
+ $('yourCashHint').textContent='AVAILABLE '+money(cash)+' · MIN '+money(minimum);
+ $('amount').max=String(cash);
+ $('amount').min=String(minimum);
+ $('amount').placeholder=String(minimum);
  if(phase==='bid'){
-   $('actionHeading').innerHTML=r.submitted||lockedLocally?'Bid locked<span>.</span>':'Place your bid<span>.</span>';
-   $('actionHelp').textContent=r.submitted||lockedLocally?'Your offer is locked. Waiting for the other bidder.':'Choose your number. Your rival won’t know your bid until the lot sells.';
-   $('bidCount').textContent=r.submitted||lockedLocally?'SUBMITTED':'SECRET BID';
-   $('bidbutton').innerHTML=r.submitted||lockedLocally?'BID SUBMITTED ✓':'LOCK IN BID <span>→</span>';
-   $('bidStatus').textContent=r.submitted||lockedLocally?'YOUR OFFER IS HIDDEN UNTIL REVEAL':'● THE HIGHEST BID TAKES THE ITEM';
-   $('stageExplainer').textContent='Highest secret bid wins. Ties are randomized.';
-   $('gameMessage').textContent=r.submitted?'YOUR BID IS IN. WAITING FOR RIVAL.':'MAKE YOUR MOVE BEFORE THE CLOCK RUNS OUT.';
-   if(newPhase){lockedLocally=false;$('amount').value='';if(musicOn)playAccent(440)}
+   const pricedOut=minimum>cash;
+   $('actionHeading').innerHTML=isLeading?'You’re leading<span>.</span>':pricedOut?'Out of cash<span>.</span>':'Raise the bid<span>.</span>';
+   $('actionHelp').textContent=isLeading?'You are winning this lot. Stay ready — the other bidder can raise it.':pricedOut?'Your rival has bid more than your remaining cash. Watch this round finish.':highBid?'Your rival is leading. Bid at least '+money(minimum)+' to take the lead.':'You can start the bidding at '+money(minimum)+'. Keep raising until time runs out.';
+   $('bidCount').textContent=(r.bidCount||0)+' TOTAL BID'+(r.bidCount===1?'':'S');
+   $('bidbutton').innerHTML=isLeading?'HIGHEST BIDDER ✓':pricedOut?'NOT ENOUGH CASH':lockedLocally?'PLACING BID…':'RAISE TO WIN <span>→</span>';
+   $('bidStatus').textContent=isLeading?'● YOU ARE CURRENTLY WINNING':pricedOut?'● YOUR BUDGET IS BELOW THE NEXT BID':'● YOU CAN BID AGAIN IF YOUR RIVAL OUTBIDS YOU';
+   $('stageExplainer').textContent='The highest live bid wins when the clock hits zero.';
+   $('gameMessage').textContent=isLeading?'YOU ARE IN THE LEAD. HOLD ON.':highBid?'OUTBID YOUR RIVAL BEFORE TIME RUNS OUT.':'THE AUCTION IS OPEN — MAKE THE FIRST BID.';
+   if(newPhase){$('amount').value='';if(musicOn)playAccent(440)}
+   else if(isLeading){$('amount').value=''}
+   else if(highBid>0&&Number($('amount').value)<minimum&&minimum<=cash){$('amount').value=String(minimum)}
  }
  else if(phase==='reveal'){
    const result=r.result||{},value=result.value||0,delta=value-(result.price||0),won=you&&result.winner===you.name;
@@ -159,27 +169,36 @@ function render(){
  if(r.players.length===2&&localStream&&r.you===r.players[0].id&&!remoteEnabled){remoteEnabled=true;makeOffer()}
  if(phase==='left'){peer?.close();peer=null;voiceStatus('Opponent disconnected')}
 }
-socket.on('state',r=>{state=r;render()});
+socket.on('state',r=>{lockedLocally=false;state=r;render()});
 function updateClock(){
  if(!state)return;
- const r=state,remaining=Math.max(0,(Number(r.endsAt)||0)-Date.now()),seconds=Math.ceil(remaining/1000),duration=r.phase==='bid'?25000:r.phase==='reveal'?6000:0;
+ const r=state,remaining=Math.max(0,(Number(r.endsAt)||0)-Date.now()),seconds=Math.ceil(remaining/1000),duration=r.phase==='bid'?30000:r.phase==='reveal'?6000:0;
  $('timer').innerHTML=(duration?String(seconds).padStart(2,'0'):'--')+'<small>s</small>';
  $('timerFill').style.width=duration?Math.max(0,Math.min(100,remaining/duration*100))+'%':'0%';
  $('timerFill').style.background=remaining<5000&&r.phase==='bid'?'#fa927b':'var(--acid)';
 }
 setInterval(updateClock,100);
 function bid(){
- if(!state||state.phase!=='bid'||state.submitted||lockedLocally)return;
- const text=$('amount').value.trim(),amt=Number(text),you=state.players.find(p=>p.id===state.you);
- if(text===''||!Number.isSafeInteger(amt)||amt<0||amt>(you?.cash||0)){notice('Enter a valid bid within your cash balance.');return}
- lockedLocally=true; socket.emit('bid',amt);notice('BID LOCKED — '+money(amt));playAccent(370);render();
+ if(!state||state.phase!=='bid'||state.leader===state.you||lockedLocally)return;
+ const text=$('amount').value.trim(),amt=Number(text),you=state.players.find(p=>p.id===state.you),minimum=state.minBid||((state.highBid||0)+100);
+ if(text===''||!Number.isSafeInteger(amt)||amt<minimum||amt>(you?.cash||0)){
+   notice('Next bid must be at least '+money(minimum)+' and within your cash balance.');return;
+ }
+ lockedLocally=true;
+ socket.emit('bid',amt);
+ notice('BID PLACED — '+money(amt));
+ playAccent(370);render();
 }
 $('bidbutton').addEventListener('click',bid);
 $('amount').addEventListener('keydown',e=>{if(e.key==='Enter')bid()});
 document.querySelectorAll('[data-bid]').forEach(button=>button.addEventListener('click',()=>{
- if(!state||state.phase!=='bid'||state.submitted)return;
+ if(!state||state.phase!=='bid'||state.leader===state.you)return;
  const cash=state.players.find(p=>p.id===state.you)?.cash||0;
- $('amount').value=String(Math.min(cash,button.dataset.bid==='max'?cash:Number(button.dataset.bid)));$('amount').focus();
+ const minimum=state.minBid||((state.highBid||0)+100);
+ if(cash<minimum){notice('You cannot afford the next bid.');return}
+ const delta=button.dataset.bid==='max'?'max':Number(button.dataset.bid);
+ $('amount').value=String(delta==='max'?cash:Math.min(cash,Math.max(minimum,(state.highBid||0)+delta)));
+ $('amount').focus();
 }));
 function sendChat(e){if(e)e.preventDefault();let v=$('chatinput').value.trim();if(!v||!state)return;socket.emit('chat',v);$('chatinput').value=''}
 $('chatForm').addEventListener('submit',sendChat);
