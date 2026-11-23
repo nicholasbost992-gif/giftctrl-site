@@ -356,3 +356,215 @@ body.is-pro .score-avatar{box-shadow:0 0 0 2px #f4d780}
 #highestBid{font-size:19px}
 #bidLeader{font-size:10px}
 }
+
+
+/* VIDEO TABLE — camera feed dominates the auction, with bidding at its side. */
+.video-game{min-height:calc(100dvh - 72px);padding:12px 0 16px;gap:9px}
+.video-game .score-ribbon{min-height:77px;flex:0 0 auto}
+.video-layout{display:grid!important;grid-template-columns:minmax(0,1.65fr) minmax(345px,.86fr)!important;gap:10px!important;flex:1;min-height:0;align-items:stretch}
+.main-camera-column{display:flex;flex-direction:column;gap:9px;min-height:0;min-width:0}
+.video-arena{display:flex;flex:1;min-height:380px;flex-direction:column;background:#161a16;border:1px solid #364232;padding:11px;gap:9px}
+.video-arena-header{display:flex;align-items:center;justify-content:space-between;font:10px var(--mono);letter-spacing:.5px;color:#9aac97;min-height:19px}
+.video-arena-header>span:first-child{display:flex;align-items:center;gap:8px}
+.video-arena-header #connectionLabel{color:var(--acid)}
+.video-live{width:6px;height:6px;background:var(--acid);box-shadow:0 0 8px #c4f45b44;border-radius:50%;display:inline-block}
+.video-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-height:218px;position:relative}
+.video-tile{position:relative;overflow:hidden;background:radial-gradient(circle at 45% 38%,#2d392d,#131b14 75%);min-width:0;border:1px solid #384737}
+.video-tile video{position:absolute;width:100%;height:100%;inset:0;object-fit:cover;display:block;background:#111}
+.local-tile video{transform:scaleX(-1)}
+.tile-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:#829481;text-align:center;padding:15px}
+.tile-placeholder .placeholder-camera{font-size:64px;font-weight:500;line-height:1;color:#5b7650;text-shadow:0 0 40px #8ab56622}
+.tile-placeholder strong{font-size:16px;color:#c7d5c2;letter-spacing:-.6px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.tile-placeholder small{font:9px var(--mono);letter-spacing:.5px;line-height:1.5}
+.remote-tile .tile-placeholder{background:linear-gradient(143deg,#202b21,#101511)}
+.remote-tile .placeholder-camera{font-size:70px}
+.tile-banner{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:37px;padding:0 10px;background:linear-gradient(0deg,#020702e8,#04100488);z-index:2;color:#fff}
+.tile-banner>span{font:10px var(--mono);white-space:nowrap}
+.tile-banner i{font-style:normal;color:#9eba98;font-size:9px}
+.tile-banner strong{font:10px var(--mono);color:var(--acid);max-width:57%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.camera-versus{position:absolute;z-index:3;top:48%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;background:#0c130d;border:1px solid #64745a;color:var(--acid);height:36px;width:36px;font:12px var(--mono);border-radius:50%;pointer-events:none}
+.gesture-callout{display:flex;align-items:center;gap:10px;padding:9px 11px;background:#222e20;border:1px solid #4f6845;min-height:54px}
+.gesture-icon{font-size:23px;line-height:1}
+.gesture-copy{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.gesture-copy strong{font:11px var(--mono);color:var(--acid);letter-spacing:.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gesture-copy span{font:10px var(--mono);color:#a8b9a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gesture-circle{--angle:0deg;width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:50%;background:conic-gradient(var(--acid) 0deg var(--angle),#354632 var(--angle) 360deg)}
+.gesture-circle>div{width:21px;height:21px;border-radius:50%;background:#1f2b1f}
+.camera-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.camera-toolbar button{background:#2b3429;color:#cad7c3;border:1px solid #465a3f;border-radius:2px;padding:9px 10px;font:10px var(--mono);white-space:nowrap;flex:1;min-height:34px}
+.camera-toolbar .camera-primary{background:var(--acid);color:#10180d;border-color:var(--acid);flex:2}
+.camera-toolbar button[aria-pressed=true]{color:var(--acid);background:#2c4226;border-color:#759561}
+.camera-toolbar button:hover{filter:brightness(1.12)}
+.camera-status{font:9px var(--mono);color:#778c77;line-height:1.5;margin:0}
+.video-game .chat-card{padding:10px 13px;flex:0 0 auto}
+.video-game .chat-head{padding-bottom:5px;border-bottom:0}
+.video-game #chatContent:not(.hidden){border-top:1px solid #354335;margin-top:6px}
+.video-game .chat-log{height:68px;max-height:100px}
+.auction-column{display:flex;flex-direction:column;gap:9px;min-width:0;min-height:0}
+.video-game .auction-stage{padding:11px;flex:none;min-height:0}
+.video-game .stage-header{font-size:9px}
+.video-game .stage-state{padding:4px 7px}
+.lot-quick{display:grid;grid-template-columns:minmax(100px,42%) minmax(0,1fr);align-items:stretch;gap:10px;margin:9px 0}
+.video-game .stage-visual{height:126px;min-height:0;flex:none;margin:0}
+.video-game .stage-overlay{left:8px;right:8px;bottom:9px}
+.video-game .stage-overlay>span{font-size:8px;margin-bottom:2px}
+.video-game .stage-overlay strong{font-size:clamp(13px,1.6vw,21px);letter-spacing:-.4px}
+.video-game .image-fallback{font-size:86px;letter-spacing:-5px}
+.lot-clue{padding:9px 0;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0}
+.lot-clue>span{font:9px var(--mono);color:var(--acid);letter-spacing:.5px}
+.lot-clue>p{font-size:12px;color:#b1c0ae;line-height:1.45;margin:0;overflow-wrap:anywhere}
+.video-game .stage-bottom{grid-template-columns:76px 1fr;padding:3px 0 8px;gap:7px}
+.video-game .timer-box>span{font-size:8px}
+.video-game .timer-box>strong{font-size:26px}
+.video-game .stage-explainer{font-size:10px;line-height:1.3}
+.video-game .result-panel{left:12px;right:12px;top:13%;padding:15px;box-shadow:0 10px 40px #000c}
+.video-game .result-panel strong{font-size:36px;letter-spacing:-1.5px}
+.video-game .result-panel p{font-size:11px}
+.video-game .action-card{flex:1;min-height:0;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-around}
+.video-game .action-title{font-size:9px}
+.video-game .live-bid-ribbon{min-height:66px;margin:8px 0}
+.video-game .live-bid-ribbon>div{padding:8px 10px}
+.video-game .live-bid-ribbon small{font-size:8px}
+.video-game #highestBid{font-size:clamp(22px,2.5vw,33px)}
+.video-game #bidLeader{font-size:clamp(11px,1.2vw,15px)}
+.bid-action-heading h2{margin:2px 0 3px;font-size:clamp(22px,2.4vw,28px);letter-spacing:-.8px;line-height:1.15}
+.bid-action-heading h2 span{color:var(--acid)}
+.bid-action-heading p{font-size:11px;line-height:1.35;color:#98a895;margin:0 0 9px}
+.video-game .input-label{margin-bottom:5px;font-size:8px}
+.video-game .bid-input-wrap{height:47px}
+.video-game .bid-input-wrap input{font-size:25px}
+.video-game .bid-input-wrap>span{font-size:20px}
+.video-game .quick-bids{gap:4px;margin:6px 0 7px}
+.video-game .quick-bids button{font-size:9px;padding:7px 2px}
+.video-game .quick-bids button.selected{background:#4f6e39;color:#edffd8;border-color:var(--acid)}
+.video-game .submit-bid{min-height:41px;padding:10px;font-size:12px}
+.video-game .bid-status{font-size:9px;margin-top:8px}
+.scan-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0 3px;border-top:1px solid #354334;margin-top:8px}
+.scan-bar>div{min-width:0}
+.scan-bar strong{font:9px var(--mono);color:#d4e4cd;display:block;margin-bottom:4px}
+.scan-bar span{font:10px var(--mono);color:#9eb396;display:block;line-height:1.3}
+.scan-bar button{font:10px var(--mono);background:#2a3825;color:var(--acid);border:1px solid #617f4d;padding:9px;white-space:nowrap}
+.scan-bar button:disabled{opacity:.5}
+.video-game .game-footer{font-size:9px}
+.report-button{border:0;background:transparent;font:9px var(--mono);color:#b9a4a0;padding:6px}
+.report-button:hover{color:#f0afa5}
+@media(min-width:761px) and (max-height:790px){
+.video-game{min-height:calc(100dvh - 60px);padding:7px 0;gap:6px}
+.video-game .score-ribbon{min-height:62px}
+.video-arena{min-height:300px;padding:8px;gap:5px}
+.video-pair{min-height:148px}
+.tile-banner{height:28px;min-height:28px}
+.gesture-callout{padding:6px;min-height:40px}
+.gesture-copy strong{font-size:10px}.gesture-copy span{font-size:9px}
+.camera-toolbar button{min-height:29px;padding:6px 8px;font-size:9px}
+.camera-status{font-size:8px}
+.video-game .stage-visual{height:90px}
+.lot-clue>p{font-size:10px}
+.video-game .stage-bottom{grid-template-columns:66px 1fr}
+.video-game .action-card{padding:9px}
+.video-game .live-bid-ribbon{min-height:49px;margin:5px 0}
+.video-game .bid-input-wrap{height:39px}
+.video-game .submit-bid{min-height:34px;padding:7px}
+.video-game .quick-bids{margin:5px 0}
+.video-game .quick-bids button{padding:5px 2px}
+.scan-bar{margin-top:4px;padding-top:5px}
+.scan-bar button{padding:6px}
+.video-game .bid-status{margin-top:4px}
+}
+@media(max-width:900px){
+.video-layout{grid-template-columns:minmax(0,1.25fr) minmax(285px,.86fr)!important}
+.video-game .lot-quick{grid-template-columns:38% 1fr}
+}
+@media(max-width:760px){
+.video-game{min-height:calc(100dvh - 62px);padding:6px 0 12px;gap:7px}
+.video-layout{display:flex!important;flex-direction:column;gap:8px!important;min-height:unset;flex:none}
+.video-game .score-ribbon{min-height:58px}
+.video-game .score-identity strong{font-size:12px}
+.video-game .score-amount strong{font-size:17px}
+.main-camera-column{display:block}
+.video-arena{min-height:0;padding:8px;gap:6px}
+.video-arena-header{font-size:8px;min-height:14px}
+.video-pair{height:clamp(140px,26dvh,225px);min-height:0;flex:none;gap:5px}
+.tile-placeholder .placeholder-camera{font-size:42px}
+.tile-placeholder strong{font-size:12px}
+.tile-placeholder small{font-size:8px}
+.tile-banner{min-height:27px;padding:0 5px}
+.tile-banner span,.tile-banner strong{font-size:8px}
+.tile-banner i{display:none}
+.camera-versus{height:27px;width:27px;font-size:10px}
+.gesture-callout{min-height:38px;padding:5px 7px;gap:6px}
+.gesture-icon{font-size:18px}
+.gesture-copy strong{font-size:9px}
+.gesture-copy span{font-size:8px}
+.gesture-circle{width:24px;height:24px}
+.gesture-circle>div{height:17px;width:17px}
+.camera-toolbar{gap:4px}
+.camera-toolbar button{font-size:9px;padding:6px;min-height:28px}
+.camera-status{font-size:8px}
+.video-game .chat-card{padding:6px 10px;margin-top:5px}
+.video-game .chat-head{padding:1px 0;font-size:9px}
+.video-game .auction-stage{padding:7px}
+.video-game .lot-quick{grid-template-columns:91px minmax(0,1fr);gap:10px;margin:4px 0}
+.video-game .stage-visual{height:75px;min-height:0}
+.video-game .stage-overlay{left:5px;right:5px;bottom:6px}
+.video-game .stage-overlay strong{font-size:12px}
+.video-game .stage-overlay>span{font-size:7px}
+.video-game .image-fallback{font-size:45px}
+.lot-clue{padding:2px 0;gap:4px}
+.lot-clue span{font-size:8px}
+.lot-clue p{font-size:10px}
+.video-game .stage-header{font-size:8px}
+.video-game .stage-bottom{grid-template-columns:63px 1fr;gap:8px}
+.video-game .timer-box strong{font-size:24px}
+.video-game .stage-explainer{font-size:9px}
+.video-game .action-card{padding:9px 10px;display:block}
+.video-game .action-title{font-size:8px}
+.video-game .live-bid-ribbon{min-height:45px;margin:6px 0}
+.video-game .live-bid-ribbon>div{padding:5px 9px}
+.video-game .live-bid-ribbon small{font-size:7px;margin-bottom:1px}
+.video-game #highestBid{font-size:21px}
+.video-game #bidLeader{font-size:11px}
+.bid-action-heading h2{font-size:20px;margin:4px 0 0}
+.bid-action-heading p{font-size:9px;margin:1px 0 7px}
+.video-game .bid-input-wrap{height:41px}
+.video-game .bid-input-wrap input{font-size:22px}
+.video-game .quick-bids{margin:5px 0}
+.video-game .quick-bids button{padding:6px 2px}
+.video-game .submit-bid{min-height:35px;padding:6px}
+.scan-bar{margin-top:5px;padding:6px 0 0}
+.scan-bar strong{font-size:8px;margin-bottom:2px}
+.scan-bar span{font-size:9px}
+.scan-bar button{padding:6px;font-size:8px}
+.video-game .bid-status{margin-top:5px;font-size:8px}
+.video-game .game-footer{font-size:8px}
+}
+@media(max-height:510px) and (min-width:650px){
+.video-layout{display:grid!important;grid-template-columns:1.15fr .95fr!important;gap:5px!important}
+.video-game{padding:4px 0;gap:4px}
+.video-game .score-ribbon{min-height:43px}
+.video-arena{min-height:0;padding:5px;gap:3px}
+.video-pair{height:clamp(130px,40dvh,230px)}
+.video-arena-header{font-size:8px}
+.gesture-callout{min-height:29px;padding:2px 5px}
+.gesture-copy strong{font-size:8px}
+.camera-toolbar button{font-size:8px;padding:4px;min-height:25px}
+.camera-status{display:none}
+.main-camera-column{display:flex}
+.video-game .chat-card{display:none}
+.video-game .auction-stage{padding:5px}
+.video-game .lot-quick{grid-template-columns:70px 1fr;gap:5px;margin:3px 0}
+.video-game .stage-visual{height:66px}
+.video-game .stage-bottom{grid-template-columns:49px 1fr}
+.video-game .timer-box strong{font-size:19px}
+.video-game .stage-explainer{font-size:8px}
+.video-game .action-card{padding:5px;flex:1}
+.video-game .live-bid-ribbon{min-height:35px;margin:4px 0}
+.video-game .bid-input-wrap{height:29px}
+.video-game .bid-input-wrap input{font-size:17px}
+.video-game .quick-bids{margin:3px 0}
+.video-game .quick-bids button{padding:4px 2px}
+.video-game .submit-bid{min-height:27px;font-size:10px}
+.bid-action-heading p{display:none}
+.scan-bar{padding:3px 0;margin:3px 0}
+.video-game .bid-status{display:none}
+}
