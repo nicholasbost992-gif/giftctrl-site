@@ -28,6 +28,7 @@ assert(!html.includes('LOOK.<br>'),'Old billboard-style homepage should be remov
 for(const id of ['openCameraCheck','cameraCheckCard','practiceCard','playLiveCard','privateRoomCard','preflightBackdrop','closePreflight'])assert(unique.has(id),'Missing homepage navigation: '+id);
 assert(html.includes('ENTER THE ROOM'),'New homepage hero missing');
 assert(html.includes('START CAMERA CHECK'),'New camera-check CTA missing');
+for(const id of ['arenaMenuButton','arenaMenuPanel','copyShareLink'])assert(unique.has(id),'Missing short-link sharing control: '+id);
 assert(js.includes('openPreflight'),'Camera-check interaction missing');
 assert(css.includes('.arena-feature-card'),'Arena homepage styling missing');
 
