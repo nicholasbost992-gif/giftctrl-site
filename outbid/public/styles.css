@@ -476,3 +476,57 @@ body{background:#08080d;color:var(--text)}
 .arena-menu-panel button #soundText{flex:1}
 .arena-menu-url{padding:10px 12px 8px;color:#a58ac6;border-top:1px solid #3b304e;font-size:11px;letter-spacing:.2px}
 body.preflight-open{overflow:hidden}
+
+
+/* Audio controls + auction transitions: nonblocking, compact and responsive. */
+.arena-music-prompt{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:0;color:#c1b2de;padding:10px;margin:10px 0 -14px;font-size:12px;font-weight:650;letter-spacing:.3px}
+.arena-music-prompt:hover,.arena-music-prompt[aria-pressed=true]{color:#e4d9ff}
+.menu-volume-label{padding:10px 12px 11px;display:flex;flex-direction:column;gap:8px;font-size:12px;color:#c2bad7;border-top:1px solid #3e3351}
+.menu-volume-label input{width:100%;height:15px;cursor:pointer;accent-color:#9b7bea}
+.match-music-toggle{border:1px solid #4e465d;border-radius:8px;background:#242032;color:#c9bce8;padding:6px 9px;font-size:11px;white-space:nowrap}
+.match-music-toggle[aria-pressed=true]{color:#e4d8ff;border-color:#8472aa;background:#2d2543}
+.lot-intro{position:fixed;inset:0;z-index:95;display:grid;place-items:center;background:rgba(6,4,14,.68);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none;visibility:hidden;opacity:0;transition:opacity .13s ease,visibility .13s}
+.lot-intro.is-visible{visibility:visible;opacity:1}
+.lot-intro-card{width:min(86vw,365px);min-width:0;position:relative;overflow:hidden;padding:17px 19px 22px;text-align:center;border:1px solid #8a70bf;border-radius:22px;background:radial-gradient(ellipse at 50% 18%,#3e2a68,#191423 67%,#11101a);box-shadow:0 14px 70px #000b,0 0 60px #5836a82b}
+.lot-intro.is-visible .lot-intro-card{animation:outbid-lot-entrance 1.6s cubic-bezier(.18,.8,.25,1) both}
+.intro-kicker{display:flex;justify-content:space-between;gap:10px;align-items:center;color:#c4b2f1;font-size:10px;letter-spacing:2px;font-weight:800}
+.intro-kicker span{color:#8f83b1}
+.intro-art{height:clamp(118px,21vh,175px);width:100%;position:relative;display:grid;place-items:center;margin:13px 0;border-radius:13px;background:radial-gradient(ellipse at 50% 80%,#614d999c,#242039)}
+.intro-art img{height:100%;width:100%;object-fit:cover;border-radius:13px;filter:saturate(.78) contrast(1.03)}
+.intro-emoji{font-size:81px;line-height:1;color:#b9a9ef;text-shadow:0 0 34px #8a6ce588}
+.intro-type{font-size:10px;letter-spacing:2.4px;font-weight:800;color:#ae97ed;text-transform:uppercase;margin-top:5px}
+.lot-intro-card h2{font-size:clamp(25px,7vw,35px);letter-spacing:-1px;margin:7px 0 5px;line-height:1.05;font-weight:800;overflow-wrap:anywhere}
+.lot-intro-card p{color:#b1a9c2;font-size:12px;margin:0}
+.intro-progress{height:3px;position:absolute;bottom:0;left:0;background:#b29aff;width:100%;transform-origin:left}
+.lot-intro.is-visible .intro-progress{animation:outbid-intro-progress 1.6s linear both}
+.bid-impact{position:fixed;top:14%;left:50%;z-index:93;padding:13px 24px;transform:translate(-50%,-20px) scale(.95);border:1px solid #a9a0c6;border-radius:50px;box-shadow:0 6px 28px #0009;background:#1a1726e8;color:#e5dbff;white-space:nowrap;pointer-events:none;opacity:0;font-weight:800;font-size:clamp(13px,3vw,20px);letter-spacing:.1px;max-width:96vw;text-overflow:ellipsis;overflow:hidden}
+.bid-impact.your-bid{background:#30245fe8;border-color:#b29aff}
+.bid-impact.is-visible{animation:outbid-bid-impact .9s cubic-bezier(.17,.85,.2,1) both}
+.result-panel:not(.hidden){animation:outbid-result-pop .42s cubic-bezier(.18,.8,.24,1) both}
+@keyframes outbid-lot-entrance{
+ 0%{transform:translateY(36px) scale(.79) rotate(-2deg);filter:blur(5px);opacity:0}
+ 15%{transform:translateY(0) scale(1.045) rotate(.4deg);filter:blur(0);opacity:1}
+ 27%{transform:translateY(0) scale(1)}
+ 76%{transform:translateY(0) scale(1);opacity:1}
+ 100%{transform:translateY(-12px) scale(.96);opacity:0}
+}
+@keyframes outbid-intro-progress{0%{transform:scaleX(1)}100%{transform:scaleX(0)}}
+@keyframes outbid-bid-impact{
+ 0%{opacity:0;transform:translate(-50%,14px) scale(.84)}
+ 20%{opacity:1;transform:translate(-50%,0) scale(1.035)}
+ 65%{opacity:1;transform:translate(-50%,0) scale(1)}
+ 100%{opacity:0;transform:translate(-50%,-23px) scale(.96)}
+}
+@keyframes outbid-result-pop{0%{opacity:0;transform:translateY(16px) scale(.93)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:690px){
+ .match-music-toggle{font-size:10px;padding:5px 7px}
+ .lot-intro-card{width:min(86vw,315px);padding:15px 16px 20px;border-radius:18px}
+ .intro-art{height:125px;margin:9px 0}
+ .lot-intro-card h2{font-size:28px}
+ .bid-impact{top:11%;padding:10px 17px}
+}
+@media(prefers-reduced-motion:reduce){
+ .lot-intro.is-visible .lot-intro-card,.lot-intro.is-visible .intro-progress,.bid-impact.is-visible,.result-panel:not(.hidden){animation:none!important}
+ .lot-intro.is-visible .lot-intro-card,.bid-impact.is-visible{opacity:1;transform:translate(-50%,0)}
+ .lot-intro.is-visible .lot-intro-card{transform:none}
+}
