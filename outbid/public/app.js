@@ -87,6 +87,7 @@ function render(){
    el.className=i+1<r.round?'finished':i+1===r.round?'active':'';
  });
  const phase=r.phase, newPhase=phase!==lastPhase||r.round!==lastRound;
+ if(newPhase && phase==='bid')lockedLocally=false;
  $('phaseLabel').textContent=({wait:'WAITING FOR AN OPPONENT',bid:'BIDDING NOW',reveal:'LOT REVEALED',done:'MATCH FINISHED',left:'OPPONENT LEFT'})[phase]||phase.toUpperCase();
  $('stageState').textContent=({wait:'WAITING',bid:'LIVE ROUND',reveal:'SOLD',done:'FINAL',left:'ENDED'})[phase]||'—';
  $('stageEyebrow').textContent='LOT '+String(Math.min(r.round,5)).padStart(3,'0')+' / 005';
