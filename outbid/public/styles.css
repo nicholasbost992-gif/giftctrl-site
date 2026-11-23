@@ -315,4 +315,13 @@ body.is-pro .score-avatar{box-shadow:0 0 0 2px #f4d780}
 .mode-left small{font-size:9px;margin-top:1px}
 .private-row{margin-top:5px}
 }
+
+/* Landscape phones — keep the active auction and bid input in view. */
+@media (max-height:520px) and (min-width:761px){
+.topbar{height:46px}.topbar-inner{padding:0 18px}.wordmark{font-size:18px}.logo-square{height:27px;width:27px;font-size:18px}
+.game{min-height:calc(100dvh - 46px);padding:6px 0;gap:5px}.game-toolbar{height:22px}.score-ribbon{min-height:57px;grid-template-columns:1fr 70px 1fr}
+.ribbon-player{padding:5px 8px}.score-avatar{width:27px;height:27px;font-size:15px}.score-identity strong{font-size:12px}.score-amount strong{font-size:16px}.score-amount small{font-size:8px}.score-center>strong{font-size:20px}
+.game-grid{gap:7px}.auction-stage{padding:8px}.stage-header{font-size:8px}.stage-visual{min-height:130px;margin:6px 0}.stage-overlay{left:15px;bottom:13px}.stage-overlay strong{font-size:26px}.stage-bottom{padding:4px 0 8px}.timer-box strong{font-size:24px}
+.action-column{gap:5px;grid-template-rows:auto minmax(30px,1fr)}.action-card{padding:9px}.action-title{font-size:8px}.action-card h2{font-size:23px;margin:7px 0 5px}.action-card>p{display:none}.input-label{margin-bottom:3px;font-size:8px}.bid-input-wrap{height:38px}.bid-input-wrap input{font-size:22px}.bid-input-wrap>span{font-size:19px}.quick-bids{margin:5px 0}.quick-bids button{padding:5px 1px}.submit-bid{min-height:33px;padding:6px}.bid-status{display:none}.chat-card{padding:6px 9px}.chat-head{padding-bottom:4px}.chat-log{height:27px}.chat-form{height:29px}.voice-row{margin-top:3px}.voice-row button{padding:4px}.game-footer{font-size:8px}
+}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
