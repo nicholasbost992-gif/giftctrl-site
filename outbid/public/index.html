@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css?v=6">
+<link rel="stylesheet" href="/styles.css?v=7">
 <script defer src="/socket.io/socket.io.js"></script>
-<script defer src="/app.js?v=6"></script>
+<script defer src="/app.js?v=7"></script>
 <script defer src="/hand-gesture.js?v=1"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
 <script defer src="/video.js?v=2"></script>
@@ -20,7 +20,14 @@
 
 <header class="topbar"><div class="topbar-inner">
   <a class="wordmark arena-wordmark" href="/" aria-label="Outbid home"><span class="arena-wordmark-symbol">◆</span><span>OUTBID</span></a>
-  <div class="nav-actions"><button id="musicToggle" class="nav-tool" type="button" aria-pressed="false"><span id="soundIcon">♪</span><span id="soundText">Sound off</span></button><button id="proNav" class="nav-tool" type="button">Pro</button></div>
+  <div class="arena-menu-wrapper"><button id="arenaMenuButton" class="arena-menu-button" aria-expanded="false" aria-controls="arenaMenuPanel" aria-label="Open site menu" type="button"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <div id="arenaMenuPanel" class="arena-menu-panel hidden">
+      <button id="musicToggle" type="button" aria-pressed="false"><span id="soundIcon">♪</span><span id="soundText">Sound off</span></button>
+      <button id="proNav" type="button">OUTBID Pro</button>
+      <button id="copyShareLink" type="button">Copy short link <span>⧉</span></button>
+      <div class="arena-menu-url">is.gd/outbid1v1</div>
+    </div>
+  </div>
 </div></header>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <main class="shell">
