@@ -190,11 +190,13 @@ socket.on('chat',m=>{
  $('chatlog').append(row);$('chatlog').scrollTop=$('chatlog').scrollHeight;
  while($('chatlog').children.length>90)$('chatlog').firstChild.remove();
 });
-$('toggleChat').addEventListener('click',()=>{
- const content=$('chatContent'),closed=content.classList.toggle('hidden');
- $('toggleChat').textContent=closed?'SHOW +':'HIDE −';
- $('toggleChat').setAttribute('aria-expanded',String(!closed));
-});
+function collapseChat(collapsed){
+ $('chatContent').classList.toggle('hidden',collapsed);
+ $('toggleChat').textContent=collapsed?'SHOW +':'HIDE −';
+ $('toggleChat').setAttribute('aria-expanded',String(!collapsed));
+}
+$('toggleChat').addEventListener('click',()=>collapseChat(!$('chatContent').classList.contains('hidden')));
+if(window.matchMedia('(max-width:760px)').matches)collapseChat(true);
 function voiceStatus(message){$('voiceStatus').textContent=message}
 function setupPeer(){
  if(peer||!localStream)return;
