@@ -173,6 +173,15 @@ async function enableCamera(){
   updateCameraControls();
  }
 }
+window.stopOutbidLobbyCamera=function(){
+ if(activeMode||!cameraStream)return;
+ for(const t of cameraStream.getTracks())t.stop();
+ cameraStream=null;localCameraEnabled=false;localMicEnabled=false;gestureEnabled=false;
+ if(handsTimer){clearTimeout(handsTimer);handsTimer=null}
+ meVideo.srcObject=null;$('lobbyVideo').srcObject=null;
+ if(videoPeer)stopPeer('Camera off');
+ updateCameraControls();
+};
 $('lobbyCameraButton').addEventListener('click',async()=>{
  if(!cameraStream){await enableCamera();return}
  for(const t of cameraStream.getTracks())t.stop();
