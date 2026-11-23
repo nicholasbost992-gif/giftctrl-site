@@ -25,11 +25,13 @@ class Context{
  createBufferSource(){return new Node()}
  resume(){this.state='running';return Promise.resolve()}
 }
-const controls=new Map();
+const controls=new Map(),listeners=new Map(),prefs=new Map();
+const session={type:'auto'};
 const sandbox={
  window:{AudioContext:Context},
- document:{addEventListener(){}},
- localStorage:{getItem(){return null},setItem(){}},
+ navigator:{audioSession:session},
+ document:{visibilityState:'visible',addEventListener(type,fn){if(!listeners.has(type))listeners.set(type,[]);listeners.get(type).push(fn)}},
+ localStorage:{getItem(k){return prefs.get(k)||null},setItem(k,v){prefs.set(k,v)}},
  setInterval(){return 1},clearInterval(){},
  notice(){},
  $:id=>{if(!controls.has(id))controls.set(id,{addEventListener(){},setAttribute(){},textContent:'',value:''});return controls.get(id)},
@@ -37,8 +39,25 @@ const sandbox={
 };
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('public/soundscape.js','utf8'),sandbox,{timeout:2000});
-vm.runInContext("audioReady();musicOn=true;nextBeatAt=0;scheduler();setMusicDucking(true);playGameSfx('item');playGameSfx('bid');playGameSfx('outbid');playGameSfx('sold');playGameSfx('win');playGameSfx('loss');playGameSfx('tick');playGameSfx('scan');",sandbox,{timeout:2000});
+assert.equal(vm.runInContext('musicWanted',sandbox),true,'Soundtrack should default to ON');
+assert.equal(vm.runInContext('musicOn',sandbox),false,'No sound should start before a user gesture');
+assert.ok(listeners.has('pointerdown')&&listeners.has('touchend'),'iOS audio must unlock on touch');
+vm.runInContext('audioUnlock({target:{closest:()=>false}})',sandbox,{timeout:2000});
+assert.equal(vm.runInContext('musicOn',sandbox),true,'First interaction starts music without a second button press');
+assert.equal(session.type,'playback','iPhone silent-mode category should allow playback');
+vm.runInContext('setAudioCaptureMode(true)',sandbox);
+assert.equal(session.type,'play-and-record','Mic capture must switch to a compatible audio session');
+vm.runInContext('setAudioCaptureMode(false)',sandbox);
+assert.equal(session.type,'playback','Audio should return to silent-mode-compatible playback after capture');
+vm.runInContext("setMusicDucking(true);playGameSfx('item');playGameSfx('bid');playGameSfx('outbid');playGameSfx('sold');playGameSfx('win');playGameSfx('loss');playGameSfx('tick');playGameSfx('scan');",sandbox,{timeout:2000});
 assert.ok(notes>=20,'Original music and game sound cues should schedule audio notes');
+vm.runInContext('toggleMusic()',sandbox);
+assert.equal(prefs.get('outbid_music'),'off','Explicitly turning music off should persist');
+assert.equal(vm.runInContext('musicOn',sandbox),false,'Explicitly muted music must stop');
+vm.runInContext('audioUnlock({target:{closest:()=>false}})',sandbox);
+assert.equal(vm.runInContext('musicOn',sandbox),false,'A later tap must not override explicit mute');
+vm.runInContext('toggleMusic()',sandbox);
+assert.equal(prefs.get('outbid_music'),'on','Turning music back on should persist');
 const html=fs.readFileSync('public/index.html','utf8');
 const app=fs.readFileSync('public/app.js','utf8');
 const css=fs.readFileSync('public/styles.css','utf8');
@@ -51,4 +70,4 @@ assert(app.includes("flashBid(r)"),'Rival bid flash must trigger on new bid');
 assert(app.includes("playGameSfx('tick')"),'Countdown sound should be connected');
 assert(css.includes('@keyframes outbid-lot-entrance'),'Item entrance animation missing');
 assert(css.includes('prefers-reduced-motion'),'Reduced-motion support missing');
-console.log('Soundscape / animation tests passed: original music, 8 game effects, all popup UI references and transitions.');
+console.log('Soundscape / animation tests passed: first-tap autoplay, persisted mute, iOS silent-mode and mic session categories, 8 effects, transitions.');
