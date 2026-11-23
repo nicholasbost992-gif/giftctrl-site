@@ -325,3 +325,34 @@ body.is-pro .score-avatar{box-shadow:0 0 0 2px #f4d780}
 .action-column{gap:5px;grid-template-rows:auto minmax(30px,1fr)}.action-card{padding:9px}.action-title{font-size:8px}.action-card h2{font-size:23px;margin:7px 0 5px}.action-card>p{display:none}.input-label{margin-bottom:3px;font-size:8px}.bid-input-wrap{height:38px}.bid-input-wrap input{font-size:22px}.bid-input-wrap>span{font-size:19px}.quick-bids{margin:5px 0}.quick-bids button{padding:5px 1px}.submit-bid{min-height:33px;padding:6px}.bid-status{display:none}.chat-card{padding:6px 9px}.chat-head{padding-bottom:4px}.chat-log{height:27px}.chat-form{height:29px}.voice-row{margin-top:3px}.voice-row button{padding:4px}.game-footer{font-size:8px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+
+
+/* Live, ascending bids: this status stays visible throughout the round. */
+.live-bid-ribbon{display:grid;grid-template-columns:1fr 1fr;background:#0f1510;border:1px solid #43573e;margin:0 0 16px;min-height:79px}
+.live-bid-ribbon>div{padding:12px 14px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.live-bid-ribbon>div+div{border-left:1px solid #354433}
+.live-bid-ribbon small{color:#849c7d;font:9px var(--mono);letter-spacing:.7px;display:block;margin-bottom:6px}
+.live-bid-ribbon strong{font-weight:700;font-size:clamp(16px,2.2vw,26px);letter-spacing:-1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#highestBid{color:var(--acid);font-size:clamp(23px,2.7vw,36px)}
+#bidLeader{font-size:clamp(11px,1.4vw,16px);letter-spacing:0}
+#bidLeader.my-lead{color:var(--acid)}
+@media(min-width:761px) and (max-height:790px){
+.live-bid-ribbon{min-height:55px;margin-bottom:8px}
+.live-bid-ribbon>div{padding:7px 9px}
+.live-bid-ribbon small{font-size:8px;margin-bottom:3px}
+#highestBid{font-size:25px}
+}
+@media(max-width:760px){
+.live-bid-ribbon{min-height:54px;margin-bottom:9px}
+.live-bid-ribbon>div{padding:8px 11px}
+.live-bid-ribbon small{font-size:8px;margin-bottom:3px}
+#highestBid{font-size:23px}
+#bidLeader{font-size:13px}
+}
+@media(max-height:520px) and (min-width:761px){
+.live-bid-ribbon{min-height:39px;margin-bottom:5px}
+.live-bid-ribbon>div{padding:4px 8px}
+.live-bid-ribbon small{font-size:7px;margin-bottom:1px}
+#highestBid{font-size:19px}
+#bidLeader{font-size:10px}
+}
