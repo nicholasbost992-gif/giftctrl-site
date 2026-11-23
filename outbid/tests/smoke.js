@@ -2,7 +2,7 @@
 const fs=require('fs');
 const assert=require('assert');
 const html=fs.readFileSync('public/index.html','utf8');
-const js=fs.readFileSync('public/app.js','utf8')+'\n'+fs.readFileSync('public/video.js','utf8');
+const js=fs.readFileSync('public/app.js','utf8')+'\n'+fs.readFileSync('public/video.js','utf8')+'\n'+fs.readFileSync('public/soundscape.js','utf8');
 const css=fs.readFileSync('public/styles.css','utf8');
 const server=fs.readFileSync('server.js','utf8');
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
@@ -17,6 +17,7 @@ for(const id of ['home','game','playOnline','playBot','createRoom','joinRoom','n
 assert(html.includes('/socket.io/socket.io.js'),'Socket.IO script missing');
 assert(html.includes('/styles.css'),'Main stylesheet missing');
 assert(html.includes('/app.js'),'Game script missing');
+assert(html.includes('/soundscape.js'),'Audio soundscape is missing');
 assert(html.includes('/hand-gesture.js'),'Hand gesture library missing');
 assert(html.includes('/video.js'),'Camera client missing');
 for(const id of ['localVideo','remoteVideo','startCamera','camToggle','handToggle','gestureProgress','handState','lotClue','appraiseBtn','appraisalResult','reportMatch'])assert(unique.has(id),'Missing camera auction control: '+id);
