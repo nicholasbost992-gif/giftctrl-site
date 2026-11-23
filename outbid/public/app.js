@@ -105,11 +105,25 @@ function setPlayer(p,prefix){
  $(prefix+'Net').textContent=p?money((p.cash||0)+(p.collection||0)):'—';
  $(prefix+'Details').textContent=p?'Cash '+money(p.cash)+' · Items '+money(p.collection):'Waiting for player';
 }
-function setArtwork(name){
- const info=imageData[name]||[null,'MYSTERY LOT'],id=info[0];
- $('itemCategory').textContent=info[1];
+function lotVisual(lot){
+ const old=imageData[lot?.name]||[null,'MYSTERY LOT'];
+ return {
+  photo:lot?.image||old[0],
+  category:lot?.category||old[1],
+  emoji:lot?.emoji||'✦'
+ };
+}
+function setArtwork(lot){
+ const visual=lotVisual(lot),id=visual.photo;
+ $('itemCategory').textContent=visual.category;
  const photo=$('itemPhoto'),fall=$('imageFallback');
- if(!id){photo.classList.add('hidden');fall.classList.remove('hidden');return}
+ fall.textContent=visual.emoji;
+ if(!id){
+  photo.dataset.src='';photo.removeAttribute('src');
+  photo.classList.add('hidden');fall.classList.remove('hidden');return;
+ }
+ // Photos represent item categories; the named lot and hidden value come from the server.
+ photo.alt=visual.category+' representative photo';
  const url='https://images.unsplash.com/'+id+'?auto=format&fit=crop&w=1050&q=82';
  photo.onerror=()=>{photo.classList.add('hidden');fall.classList.remove('hidden')};
  photo.onload=()=>{photo.classList.remove('hidden');fall.classList.add('hidden')};
@@ -124,7 +138,7 @@ function showLotIntro(r){
  $('lotIntroRound').textContent=String(r.round).padStart(2,'0')+' / 05';
  $('lotIntroTitle').textContent=lot.name;
  $('lotIntroCondition').textContent=lot.condition+' · NEW LOT';
- const id=imageData[lot.name]?.[0];
+ const id=lotVisual(lot).photo;
  fallback.textContent=lot.emoji||'✦';
  if(id){
   const src='https://images.unsplash.com/'+id+'?auto=format&fit=crop&w=800&q=80';
@@ -183,7 +197,7 @@ function render(){
  const item=r.lot?.name||r.result?.item||'The table is ready';
  $('itemName').textContent=phase==='wait'?'Waiting for your opponent':phase==='left'?'Match ended':phase==='done'?'Auction complete':item;
  $('lotClue').textContent=r.lot?.clue||'A new item is coming to the table.';
- setArtwork(phase==='wait'||phase==='left'||phase==='done'?null:item);
+ setArtwork(phase==='bid'?r.lot:phase==='reveal'?r.result:null);
  $('resultPanel').classList.toggle('hidden',phase!=='reveal'&&phase!=='done'&&phase!=='left');
  const scan=r.appraisal,scansRemaining=Number(r.scansRemaining)||0,scanCost=Number(r.appraisalCost)||300;
  $('appraisalResult').textContent=scan?'ESTIMATE: '+money(scan.low)+' – '+money(scan.high):scansRemaining+' SCAN'+(scansRemaining===1?'':'S')+' LEFT · '+money(scanCost)+' EACH';
