@@ -223,7 +223,7 @@ function playGameSfx(kind){
 // Legacy calls from game code use a short confirmation chime; keep compatibility.
 function playAccent(){playGameSfx('click')}
 document.addEventListener('DOMContentLoaded',()=>{
-setIOSAudioSession();
+// Do not claim an exclusive playback session before the player interacts.
 $('musicToggle').addEventListener('click',toggleMusic);
 $('effectsToggle').addEventListener('click',toggleEffects);
 $('musicVolume').addEventListener('input',e=>{volume=Math.max(0,Math.min(1,Number(e.target.value)/100));syncAudioGains();syncAudioControls()});
