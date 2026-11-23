@@ -17,19 +17,23 @@ function isAllowedHandBid(){
 }
 function updateCameraControls(){
  const active=!!cameraStream;
+ $('lobbyVideo').classList.toggle('hidden',!active||!localCameraEnabled);
+ $('lobbyVideoPlaceholder').classList.toggle('hidden',active&&localCameraEnabled);
+ $('lobbyCameraButton').textContent=active?'Turn off camera':'Enable camera + mic';
+ $('lobbyCameraStatus').textContent=active?(localCameraEnabled?'Preview on · mic '+(localMicEnabled?'on':'off'):'Camera disabled'):'Only turns on when you choose';
  $('startCamera').classList.toggle('hidden',active);
  $('camToggle').classList.toggle('hidden',!active);
  $('mic').classList.toggle('hidden',!active);
  $('mute').classList.toggle('hidden',!active||isBotMatch());
- $('camToggle').textContent=localCameraEnabled?'CAM ON':'CAM OFF';
- $('mic').textContent=localMicEnabled?'MIC ON':'MIC OFF';
- $('mute').textContent=remoteMuted?'SOUND OFF':'SOUND ON';
- $('handToggle').textContent=gestureEnabled?'✋ HAND BIDS ON':'HAND BIDS OFF';
+ $('camToggle').textContent=localCameraEnabled?'Camera on':'Camera off';
+ $('mic').textContent=localMicEnabled?'Mic on':'Mic off';
+ $('mute').textContent=remoteMuted?'Sound off':'Sound on';
+ $('handToggle').textContent=gestureEnabled?'Hand bids on':'Hand bids off';
  $('handToggle').setAttribute('aria-pressed',String(gestureEnabled));
  $('yourCameraBadge').textContent=localCameraEnabled?'· LIVE':'· OFF';
  $('localPlaceholder').classList.toggle('hidden',active&&localCameraEnabled);
  $('localVideo').classList.toggle('hidden',!active||!localCameraEnabled);
- $('connectionLabel').textContent=isBotMatch()?'VS BOT':videoPeer?.connectionState==='connected'?'VIDEO CONNECTED':active?'AWAITING RIVAL VIDEO':'VIDEO OFF';
+ $('connectionLabel').textContent=isBotMatch()?'Bot match':videoPeer?.connectionState==='connected'?'Connected':active?'Waiting for rival video':'Video off';
 }
 function updateRemoteVisual(r){
  const bot=r.players?.some(p=>p.id==='bot'),other=r.players?.find(p=>p.id!==r.you),link=videoPeer?.connectionState==='connected'&&otherVideo.srcObject;
@@ -151,6 +155,7 @@ async function enableCamera(){
   }
   cameraStream=stream;localCameraEnabled=stream.getVideoTracks().some(t=>t.enabled);localMicEnabled=stream.getAudioTracks().some(t=>t.enabled);
   meVideo.srcObject=stream;await meVideo.play().catch(()=>{});
+  $('lobbyVideo').srcObject=stream;await $('lobbyVideo').play().catch(()=>{});
   videoStatus('Camera enabled. Raise an open hand high in the frame, then lower it between bids. Other players can screen-record.');
   $('handState').textContent='OPEN PALM IN UPPER HALF OF CAMERA · HOLD FOR ONE SECOND';
   updateCameraControls();
@@ -168,6 +173,14 @@ async function enableCamera(){
   updateCameraControls();
  }
 }
+$('lobbyCameraButton').addEventListener('click',async()=>{
+ if(!cameraStream){await enableCamera();return}
+ for(const t of cameraStream.getTracks())t.stop();
+ cameraStream=null;localCameraEnabled=false;localMicEnabled=false;gestureEnabled=false;
+ meVideo.srcObject=null;$('lobbyVideo').srcObject=null;
+ if(videoPeer)stopPeer('Camera turned off.');
+ updateCameraControls();
+});
 $('startCamera').addEventListener('click',enableCamera);
 $('camToggle').addEventListener('click',()=>{
  if(!cameraStream)return;
