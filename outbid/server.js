@@ -89,7 +89,7 @@ function resolve(r){
  const w=r.players.find(p=>p.id===r.leader)||null;
  const price=w?r.highBid:0;
  if(w){w.cash-=price;w.collection+=r.lots[r.round].value;}
- r.result={winner:w?.name||'Nobody',winnerId:w?.id||null,price,value:r.lots[r.round].value,item:r.lots[r.round].name,profit:r.lots[r.round].value-price,condition:r.lots[r.round].condition};
+ r.result={winner:w?.name||'Nobody',winnerId:w?.id||null,price,value:r.lots[r.round].value,item:r.lots[r.round].name,emoji:r.lots[r.round].emoji,category:r.lots[r.round].category,image:r.lots[r.round].image,profit:r.lots[r.round].value-price,condition:r.lots[r.round].condition};
  r.phase='reveal';r.endsAt=Date.now()+REVEAL_TIME;emit(r);
  r.timer=setTimeout(()=>{r.round++;start(r)},REVEAL_TIME);
 }
