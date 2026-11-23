@@ -55,6 +55,15 @@ async function availablePort(){
   assert.equal(opened.highBid,0);
   assert.equal(opened.minBid,100);
   assert.equal(typeof opened.lot.clue,'string','Each item has a seller clue');
+  assert.equal(typeof opened.lot.category,'string','Every new lot has a category');
+  assert.equal(typeof opened.lot.emoji,'string','Every new lot has a backup visual');
+  assert.equal(opened.lot.value,undefined,'True value must stay hidden until reveal');
+  const statsResponse=await fetch('http://127.0.0.1:'+port+'/api/catalog/stats');
+  assert.equal(statsResponse.status,200);
+  const stats=await statsResponse.json();
+  assert.equal(stats.totalItems,1100,'The server serves the full catalog');
+  assert.equal(stats.categories,44);
+
   const scanAlice=next(alice,'state',r=>r.appraisal&&r.scansRemaining===1);
   const scanBob=next(bob,'state',r=>r.players.find(p=>p.id===alice.id)?.cash===9700);
   alice.emit('appraise');
@@ -97,7 +106,7 @@ async function availablePort(){
   const raised=next(solo,'state',r=>r.phase==='bid'&&r.leader===solo.id&&r.highBid===outbid.highBid+100);
   solo.emit('bid',outbid.highBid+100);
   await raised;
-  console.log('Live auction integration passed: bidding, private appraisals, video signaling, bot counterbids and human counterraises.');
+  console.log('Live auction integration passed: 1100-lot server catalog, private appraisals, 1v1 bidding and bot counterraises.');
  }catch(e){
   console.error('AUCTION INTEGRATION FAILED:',e.stack||e);
   if(logs)console.error('SERVER LOG:',logs.slice(-2000));
