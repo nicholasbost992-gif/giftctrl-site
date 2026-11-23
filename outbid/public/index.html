@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css?v=2">
+<link rel="stylesheet" href="/styles.css?v=3">
 <script defer src="/socket.io/socket.io.js"></script>
-<script defer src="/app.js?v=2"></script>
+<script defer src="/app.js?v=3"></script>
 </head>
 <body>
 <div class="noise" aria-hidden="true"></div>
@@ -56,7 +56,7 @@
       <div class="preview-photo"><img alt="Luxury wristwatch auction preview" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85" onerror="this.style.display='none';this.parentNode.classList.add('fallback-image')"></div>
       <div class="photo-footer"><div><span>LOT #001</span><strong>WHAT'S IT WORTH?</strong></div><div class="photo-stamp">?</div></div>
     </div>
-    <div class="showcase-bottom"><span>REAL ITEMS. SECRET BIDS. BIG SWINGS.</span><span>⟶</span></div>
+    <div class="showcase-bottom"><span>LIVE BIDS. LAST-SECOND WINS. BIG SWINGS.</span><span>⟶</span></div>
   </div>
 </section>
 <section id="game" class="game hidden" aria-label="Auction game">
@@ -79,14 +79,14 @@
     </div>
     <aside class="action-column">
       <div class="action-card" id="bidCard">
-        <div class="action-title"><span>YOUR MOVE</span><span id="bidCount">SECRET BID</span></div>
+        <div class="action-title"><span>YOUR MOVE</span><span id="bidCount">LIVE AUCTION</span></div>
         <h2 id="actionHeading">Place your bid<span>.</span></h2>
-        <p id="actionHelp">Choose an amount. Your opponent can't see it until the round ends.</p>
-        <div class="input-label"><label for="amount">YOUR OFFER</label><span id="yourCashHint">AVAILABLE $10,000</span></div>
-        <div class="bid-input-wrap"><span>$</span><input id="amount" type="number" min="0" max="10000" step="100" inputmode="numeric" placeholder="0" autocomplete="off"></div>
-        <div class="quick-bids"><button type="button" data-bid="500">$500</button><button type="button" data-bid="1500">$1.5K</button><button type="button" data-bid="3000">$3K</button><button type="button" data-bid="max">ALL IN</button></div>
-        <button id="bidbutton" class="submit-bid" type="button">LOCK IN BID <span>→</span></button>
-        <div id="bidStatus" class="bid-status"><span class="status-bullet"></span> YOUR BID STAYS HIDDEN</div>
+        <p id="actionHelp">Raise the current bid. Keep bidding until the clock hits zero.</p>
+        <div class="live-bid-ribbon" aria-live="polite"><div><small>CURRENT BID</small><strong id="highestBid">$0</strong></div><div><small>HIGHEST BIDDER</small><strong id="bidLeader">NO BIDS YET</strong></div></div><div class="input-label"><label for="amount">YOUR NEXT BID</label><span id="yourCashHint">AVAILABLE $10,000</span></div>
+        <div class="bid-input-wrap"><span>$</span><input id="amount" type="number" min="100" max="10000" step="100" inputmode="numeric" placeholder="100" autocomplete="off"></div>
+        <div class="quick-bids"><button type="button" data-bid="100">+ $100</button><button type="button" data-bid="500">+ $500</button><button type="button" data-bid="1000">+ $1K</button><button type="button" data-bid="max">ALL IN</button></div>
+        <button id="bidbutton" class="submit-bid" type="button">RAISE BID <span>→</span></button>
+        <div id="bidStatus" class="bid-status"><span class="status-bullet"></span> YOUR RIVAL CAN COUNTER UNTIL THE CLOCK ENDS</div>
       </div>
       <div class="chat-card">
         <div class="chat-head"><div><span class="chat-light"></span><strong>ROOM CHAT</strong></div><button id="toggleChat" type="button" aria-expanded="true">HIDE −</button></div>
