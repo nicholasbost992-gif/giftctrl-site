@@ -24,6 +24,7 @@ try{$('name').value=localStorage.getItem('outbid_nickname')||''}catch(e){}
 function begin(mode,code){
  if(!socket.connected){notice('Reconnecting. Try again in a moment.');return}
  const name=nickname(); activeMode=mode;lastPhase='';lastRound=0;lockedLocally=false;
+ setMusicScene('match');
  $('home').classList.add('hidden');$('preflightBackdrop').classList.add('hidden');document.body.classList.remove('preflight-open');$('game').classList.remove('hidden');
  $('resultPanel').classList.add('hidden');
  $('gameMessage').textContent='CONNECTING TO THE TABLE…';
