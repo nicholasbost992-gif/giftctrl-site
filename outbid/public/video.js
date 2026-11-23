@@ -163,7 +163,7 @@ async function enableCamera(){
   if(queuedOffer){const old=queuedOffer;queuedOffer=null;await acceptOffer(old)}
   if(window.Hands){gestureEnabled=true;updateCameraControls();beginHandTracking()}
   else{gestureEnabled=false;updateCameraControls();videoStatus('Camera is live. Hand tracker unavailable; use the bid button.')}
-  if(typeof musicBus!=='undefined'&&musicBus)musicBus.gain.value=.12;
+  setMusicDucking(true);
  }catch(e){
   if(e.name==='NotAllowedError')videoStatus('Camera permission denied. You can still bid with the button.');
   else videoStatus('Could not start camera: '+e.message);
@@ -178,6 +178,7 @@ window.stopOutbidLobbyCamera=function(){
  for(const t of cameraStream.getTracks())t.stop();
  cameraStream=null;localCameraEnabled=false;localMicEnabled=false;gestureEnabled=false;
  if(handsTimer){clearTimeout(handsTimer);handsTimer=null}
+ setMusicDucking(false);
  meVideo.srcObject=null;$('lobbyVideo').srcObject=null;
  if(videoPeer)stopPeer('Camera off');
  updateCameraControls();
@@ -186,6 +187,7 @@ $('lobbyCameraButton').addEventListener('click',async()=>{
  if(!cameraStream){await enableCamera();return}
  for(const t of cameraStream.getTracks())t.stop();
  cameraStream=null;localCameraEnabled=false;localMicEnabled=false;gestureEnabled=false;
+ setMusicDucking(false);
  meVideo.srcObject=null;$('lobbyVideo').srcObject=null;
  if(videoPeer)stopPeer('Camera turned off.');
  updateCameraControls();
@@ -265,6 +267,7 @@ $('reportMatch').addEventListener('click',()=>{
 otherVideo.addEventListener('click',()=>otherVideo.play().catch(()=>{}));
 window.addEventListener('pagehide',()=>{
  if(cameraStream)cameraStream.getTracks().forEach(t=>t.stop());
+ setMusicDucking(false);
  if(videoPeer)videoPeer.close();
 });
 updateCameraControls();
