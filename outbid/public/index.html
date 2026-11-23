@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f0e">
+<meta name="description" content="OUTBID — a head-to-head auction game. Outsmart your rival in five mystery rounds.">
+<title>OUTBID — The 1v1 Auction Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css?v=2">
+<script defer src="/socket.io/socket.io.js"></script>
+<script defer src="/app.js?v=2"></script>
+</head>
+<body>
+<div class="noise" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="/" aria-label="OUTBID homepage"><span class="logo-square">O<span class="logo-dot">.</span></span><span>OUTBID<span class="wordmark-dot">.</span></span></a>
+    <div class="nav-center"><span class="nav-pulse"></span><span>HEAD-TO-HEAD AUCTIONS</span></div>
+    <div class="nav-actions"><button id="musicToggle" class="nav-tool" type="button" aria-pressed="false" title="Toggle music"><span id="soundIcon">♪</span><span id="soundText">SOUND OFF</span></button><button id="proNav" class="nav-tool pro-link" type="button">PRO <span class="pro-star">✳</span></button></div>
+  </div>
+</header>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<main class="shell">
+<section id="home" class="home">
+  <div class="left-rail">
+    <div class="home-topline"><span class="eyetag"><span class="signal"></span> WELCOME TO THE TABLE</span><span class="edition">001 — THE ORIGINAL</span></div>
+    <div class="headline-block">
+      <div class="superheading">THE INTERNET'S NEW</div>
+      <h1>BLUFF.<br><span>BID.</span> WIN.</h1>
+      <p class="tagline">Five lots. Two bidders. Ten grand each.<br>Only one walks away on top.</p>
+    </div>
+    <div class="home-controls">
+      <div class="mode-header"><span>LET'S PLAY</span><span class="rule-line"></span><span>01 / 02</span></div>
+      <div class="field-name"><label for="name">YOUR NICKNAME</label><span>18 CHARACTERS MAX</span></div>
+      <input id="name" class="name-input" name="nickname" placeholder="Enter a name" maxlength="18" autocomplete="nickname" value="">
+      <div class="mode-list">
+        <button id="playOnline" class="mode primary-mode" type="button"><span class="mode-left"><span class="mode-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h16"/><path d="m17 9 3 3-3 3"/></svg></span><span><strong>FIND AN OPPONENT</strong><small>Queue for a real 1v1 match</small></span></span><span class="mode-chevron">↗</span></button>
+        <button id="playBot" class="mode secondary-mode" type="button"><span class="mode-left"><span class="mode-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9 16h6"/></svg></span><span><strong>PLAY AGAINST BOT</strong><small>Get a feel for the game instantly</small></span></span><span class="mode-chevron">↗</span></button>
+      </div>
+      <div class="private-row"><button id="createRoom" type="button">+ CREATE PRIVATE ROOM</button><span class="private-divider">OR</span><div class="private-join"><input id="roomcode" maxlength="6" aria-label="Six digit room code" placeholder="ROOM CODE" autocomplete="off" spellcheck="false"><button id="joinRoom" type="button" aria-label="Join private room">JOIN ↗</button></div></div>
+    </div>
+    <div class="home-foot"><span><i class="tiny-square"></i> NO SIGN UP</span><span><i class="tiny-square"></i> 100% FREE</span><span><i class="tiny-square"></i> LIVE MULTIPLAYER</span></div>
+  </div>
+  <div class="right-rail">
+    <div class="showcase-topline"><span><i class="indicator"></i> AT THE AUCTION TABLE</span><span class="showcase-num">ROUND 01/05</span></div>
+    <div class="duel-visual">
+      <div class="duel-player"><div class="duel-avatar you-avatar">YOU</div><span>YOU</span><b>$10,000</b></div>
+      <div class="duel-vs">VS<span class="vs-spark">✳</span></div>
+      <div class="duel-player"><div class="duel-avatar rival-avatar">?</div><span>RIVAL</span><b>$10,000</b></div>
+    </div>
+    <div class="lot-preview">
+      <div class="lot-top"><span>THE NEXT LOT</span><span class="lot-tag">VALUE UNKNOWN</span></div>
+      <div class="preview-photo"><img alt="Luxury wristwatch auction preview" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85" onerror="this.style.display='none';this.parentNode.classList.add('fallback-image')"></div>
+      <div class="photo-footer"><div><span>LOT #001</span><strong>WHAT'S IT WORTH?</strong></div><div class="photo-stamp">?</div></div>
+    </div>
+    <div class="showcase-bottom"><span>REAL ITEMS. SECRET BIDS. BIG SWINGS.</span><span>⟶</span></div>
+  </div>
+</section>
+<section id="game" class="game hidden" aria-label="Auction game">
+  <div class="game-toolbar"><div class="game-toolbar-left"><button id="leaveMatch" class="back-button" type="button">← LEAVE</button><span class="toolbar-divider"></span><span id="phaseLabel" class="phase-label">CONNECTING</span></div><div class="game-toolbar-right"><span id="roomInfo">ROOM —</span><button id="copyRoom" class="copy-button" type="button" title="Copy room code">COPY CODE ⧉</button></div></div>
+  <div class="score-ribbon">
+    <div class="ribbon-player you"><div class="score-identity"><span class="score-avatar" id="youInitial">Y</span><div><span class="score-role">YOU</span><strong id="youName">Player</strong></div></div><div class="score-amount"><small>NET WORTH</small><strong id="youNet">$10,000</strong><span id="youDetails">Cash $10,000 · Items $0</span></div></div>
+    <div class="score-center"><span>ROUND</span><strong id="roundNumber">1<span>/5</span></strong><div id="roundPips" class="round-pips"><span></span><span></span><span></span><span></span><span></span></div></div>
+    <div class="ribbon-player them"><div class="score-identity"><span class="score-avatar enemy" id="themInitial">?</span><div><span class="score-role">OPPONENT</span><strong id="themName">Searching…</strong></div></div><div class="score-amount"><small>NET WORTH</small><strong id="themNet">$10,000</strong><span id="themDetails">Cash $10,000 · Items $0</span></div></div>
+  </div>
+  <div class="game-grid">
+    <div class="auction-stage">
+      <div class="stage-header"><span id="stageEyebrow">LOT 001 — UPCOMING</span><span id="stageState" class="stage-state">WAITING</span></div>
+      <div class="stage-visual" id="stageVisual"><img id="itemPhoto" alt="Auction lot" class="stage-image hidden"><div id="imageFallback" class="image-fallback">?</div><div class="stage-overlay"><span id="itemCategory">MYSTERY ITEM</span><strong id="itemName">Waiting for an opponent</strong></div></div>
+      <div class="stage-bottom">
+        <div class="timer-box"><span>TIME REMAINING</span><strong id="timer">--<small>s</small></strong></div>
+        <div class="stage-explainer" id="stageExplainer">The highest secret bid wins the lot.</div>
+        <div id="timerTrack" class="timer-track"><div id="timerFill"></div></div>
+      </div>
+      <div id="resultPanel" class="result-panel hidden" aria-live="polite"><span id="resultLabel">LOT SOLD</span><strong id="resultValue">$0</strong><p id="resultDetail"></p></div>
+    </div>
+    <aside class="action-column">
+      <div class="action-card" id="bidCard">
+        <div class="action-title"><span>YOUR MOVE</span><span id="bidCount">SECRET BID</span></div>
+        <h2 id="actionHeading">Place your bid<span>.</span></h2>
+        <p id="actionHelp">Choose an amount. Your opponent can't see it until the round ends.</p>
+        <div class="input-label"><label for="amount">YOUR OFFER</label><span id="yourCashHint">AVAILABLE $10,000</span></div>
+        <div class="bid-input-wrap"><span>$</span><input id="amount" type="number" min="0" max="10000" step="100" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+        <div class="quick-bids"><button type="button" data-bid="500">$500</button><button type="button" data-bid="1500">$1.5K</button><button type="button" data-bid="3000">$3K</button><button type="button" data-bid="max">ALL IN</button></div>
+        <button id="bidbutton" class="submit-bid" type="button">LOCK IN BID <span>→</span></button>
+        <div id="bidStatus" class="bid-status"><span class="status-bullet"></span> YOUR BID STAYS HIDDEN</div>
+      </div>
+      <div class="chat-card">
+        <div class="chat-head"><div><span class="chat-light"></span><strong>ROOM CHAT</strong></div><button id="toggleChat" type="button" aria-expanded="true">HIDE −</button></div>
+        <div id="chatContent"><div id="chatlog" class="chat-log" role="log" aria-label="Room chat" aria-live="polite"><div class="system-line">Messages only go to this room.</div></div>
+        <form id="chatForm" class="chat-form"><input id="chatinput" maxlength="240" placeholder="Say something..." autocomplete="off" aria-label="Chat message"><button type="submit" title="Send message">↗</button></form>
+        <div class="voice-row"><button id="mic" type="button">MIC OFF</button><button id="mute" type="button">AUDIO ON</button><span id="voiceStatus">Voice optional</span></div></div>
+        <audio id="remoteAudio" autoplay playsinline></audio>
+      </div>
+    </aside>
+  </div>
+  <div class="game-footer"><span id="gameMessage">THE TABLE IS READY.</span><button type="button" id="newMatch">NEW MATCH ↗</button></div>
+</section>
+</main>
+<div class="modal-backdrop hidden" id="proBackdrop">
+  <section id="proPanel" class="pro-dialog" role="dialog" aria-modal="true" aria-labelledby="proTitle">
+    <button id="closePro" class="modal-close" type="button" aria-label="Close">×</button>
+    <span class="modal-kicker">OUTBID / MEMBERSHIP</span><h2 id="proTitle">THE INNER CIRCLE<span>.</span></h2>
+    <p>Support the game and unlock cosmetic profile flair when membership becomes available. Winning still comes down to your bids.</p>
+    <div class="pro-price">$4.99 <span>/ MONTH · PLANNED</span></div>
+    <p id="proStatus" class="pro-status">Checking membership availability…</p>
+    <button id="proButton" class="submit-bid hidden" type="button">GET PRO ↗</button>
+    <button id="portalButton" class="small-link hidden" type="button">MANAGE BILLING ↗</button>
+    <p class="fine-print">No payment is charged unless checkout is enabled and you choose to subscribe.</p>
+  </section>
+</div>
+</body></html>
