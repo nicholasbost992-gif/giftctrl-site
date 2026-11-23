@@ -80,16 +80,16 @@ function render(){
  if(!state)return;
  const r=state,players=r.players||[],you=players.find(p=>p.id===r.you),them=players.find(p=>p.id!==r.you);
  setPlayer(you,'you');setPlayer(them,'them');
- $('roomInfo').textContent='ROOM '+r.code;
+ $('roomInfo').textContent='Room '+r.code;
  $('roundNumber').innerHTML=String(Math.min(r.round,5))+'<span>/5</span>';
  Array.from($('roundPips').children).forEach((el,i)=>{
    el.className=i+1<r.round?'finished':i+1===r.round?'active':'';
  });
  const phase=r.phase, newPhase=phase!==lastPhase||r.round!==lastRound;
  if(newPhase && phase==='bid')lockedLocally=false;
- $('phaseLabel').textContent=({wait:'WAITING FOR AN OPPONENT',bid:'BIDDING NOW',reveal:'LOT REVEALED',done:'MATCH FINISHED',left:'OPPONENT LEFT'})[phase]||phase.toUpperCase();
- $('stageState').textContent=({wait:'WAITING',bid:'LIVE ROUND',reveal:'SOLD',done:'FINAL',left:'ENDED'})[phase]||'—';
- $('stageEyebrow').textContent='LOT '+String(Math.min(r.round,5)).padStart(3,'0')+' / 005';
+ $('phaseLabel').textContent=({wait:'Waiting for opponent',bid:'Bidding',reveal:'Lot sold',done:'Match finished',left:'Opponent left'})[phase]||phase.toUpperCase();
+ $('stageState').textContent=({wait:'Waiting',bid:'Live',reveal:'Sold',done:'Final',left:'Ended'})[phase]||'—';
+ $('stageEyebrow').textContent='Lot '+String(Math.min(r.round,5)).padStart(3,'0')+' / 005';
  const item=r.lot?.name||r.result?.item||'The table is ready';
  $('itemName').textContent=phase==='wait'?'Waiting for your opponent':phase==='left'?'Match ended':phase==='done'?'Auction complete':item;
  $('lotClue').textContent=r.lot?.clue||'A new item is coming to the table.';
@@ -103,7 +103,7 @@ function render(){
  const highBid=Number(r.highBid)||0,minimum=Number(r.minBid)||highBid+100,cash=you?.cash||0;
  const canBid=phase==='bid'&&!isLeading&&!lockedLocally&&minimum<=cash;
  $('highestBid').textContent=money(highBid);
- $('bidLeader').textContent=r.leaderName?(isLeading?'YOU':r.leaderName.toUpperCase()):'NO BIDS YET';
+ $('bidLeader').textContent=r.leaderName?(isLeading?'YOU':r.leaderName.toUpperCase()):'No bids yet';
  $('bidLeader').classList.toggle('my-lead',isLeading);
  $('amount').disabled=!canBid;
  $('bidbutton').disabled=!canBid;
@@ -117,10 +117,10 @@ function render(){
    $('actionHeading').innerHTML=isLeading?'You’re winning<span>.</span>':pricedOut?'Out of cash<span>.</span>':'Raise your hand<span>.</span>';
    $('actionHelp').textContent=isLeading?'Hold on to your lead — if your rival raises, drop your hand then raise it again.':pricedOut?'Your rival has bid more than your available cash.':highBid?'Your rival is leading. Open your palm or use the button to bid '+money(minimum)+' or more.':'Show an open palm above your shoulder for one second, or tap BID.';
    $('bidCount').textContent=(r.bidCount||0)+' TOTAL BID'+(r.bidCount===1?'':'S');
-   $('bidbutton').innerHTML=isLeading?'HIGHEST BIDDER ✓':pricedOut?'NOT ENOUGH CASH':lockedLocally?'PLACING BID…':'BID WITH BUTTON <span>→</span>';
-   $('bidStatus').textContent=isLeading?'● YOU ARE CURRENTLY WINNING':pricedOut?'● YOUR BUDGET IS BELOW THE NEXT BID':'● YOU CAN BID AGAIN IF YOUR RIVAL OUTBIDS YOU';
+   $('bidbutton').innerHTML=isLeading?'You’re leading ✓':pricedOut?'Not enough cash':lockedLocally?'Placing bid…':'Place bid <span>→</span>';
+   $('bidStatus').textContent=isLeading?'You have the highest bid':pricedOut?'Not enough cash for another bid':'Raise your hand or use the button to bid again';
    $('stageExplainer').textContent='24-second auctions. Last-second bids briefly extend the clock.';
-   $('gameMessage').textContent=isLeading?'YOU ARE IN THE LEAD. HOLD ON.':highBid?'OUTBID YOUR RIVAL BEFORE TIME RUNS OUT.':'THE AUCTION IS OPEN — MAKE THE FIRST BID.';
+   $('gameMessage').textContent=isLeading?'You’re in the lead. Watch for a new bid.':highBid?'Your rival is ahead. Raise your bid.':'The auction is open. Make the first bid.';
    if(newPhase){$('amount').value='';if(musicOn)playAccent(440)}
    else if(isLeading){$('amount').value=''}
    else if(highBid>0&&Number($('amount').value)<minimum&&minimum<=cash){$('amount').value=String(minimum)}
@@ -132,42 +132,42 @@ function render(){
    $('resultDetail').textContent='Won by '+String(result.winner||'Nobody')+' for '+money(result.price||0)+' · '+(delta>=0?'+':'−')+money(Math.abs(delta))+' profit';
    $('actionHeading').innerHTML='Bids are in<span>.</span>';
    $('actionHelp').textContent='This lot is actually worth '+money(value)+'. '+(delta>=0?'The winner made a profit.':'The winning bid was too high.')+' Next round soon.';
-   $('bidCount').textContent='ROUND COMPLETE';
-   $('bidStatus').textContent='● EVERY DOLLAR COUNTS';
+   $('bidCount').textContent='Round complete';
+   $('bidStatus').textContent='Every dollar counts';
    $('stageExplainer').textContent='The true lot value has been revealed.';
-   $('bidbutton').textContent='WAITING FOR NEXT ROUND';
-   $('gameMessage').textContent='THE NEXT LOT IS COMING UP.';
+   $('bidbutton').textContent='Next round soon';
+   $('gameMessage').textContent='Next lot coming up…';
    if(newPhase&&musicOn)playAccent(won?660:260);
  }
  else if(phase==='done'){
    const a=players[0],b=players[1],aNet=a?(a.cash+a.collection):0,bNet=b?(b.cash+b.collection):0;
    const winner=aNet===bNet?'DRAW':nameOf(aNet>bNet?a:b);
-   $('resultLabel').textContent='FIVE ROUNDS COMPLETE';
-   $('resultValue').textContent=winner==='DRAW'?'DRAW':winner===nameOf(you)?'YOU WIN':'GAME OVER';
+   $('resultLabel').textContent='Match complete';
+   $('resultValue').textContent=winner==='DRAW'?'DRAW':winner===nameOf(you)?'You win!':'Game over';
    $('resultDetail').textContent=winner==='DRAW'?'Both players tied.':'Winner: '+winner+' · '+money(Math.max(aNet,bNet))+' net worth';
    $('actionHeading').innerHTML='Game over<span>.</span>';
    $('actionHelp').textContent='You started with $10,000. Ready to run it back?';
-   $('bidCount').textContent='FINAL RESULT';
-   $('bidbutton').textContent='MATCH COMPLETE';
-   $('bidStatus').textContent='● GG. WELL PLAYED.';
+   $('bidCount').textContent='Final result';
+   $('bidbutton').textContent='Match complete';
+   $('bidStatus').textContent='Good game';
    $('stageExplainer').textContent='Highest net worth after five lots wins.';
-   $('gameMessage').textContent='HIT NEW MATCH TO START AGAIN.';
+   $('gameMessage').textContent='Start another match to play again.';
  }
  else if(phase==='left'){
-   $('resultLabel').textContent='OPPONENT DISCONNECTED';$('resultValue').textContent='MATCH ENDED';
+   $('resultLabel').textContent='OPPONENT DISCONNECTED';$('resultValue').textContent='Match ended';
    $('resultDetail').textContent='The other player has left the room.';
    $('actionHeading').innerHTML='They left<span>.</span>';$('actionHelp').textContent='You can start another game any time.';
-   $('bidCount').textContent='CONNECTION ENDED';$('bidbutton').textContent='MATCH ENDED';
-   $('gameMessage').textContent='START A NEW MATCH TO PLAY AGAIN.';
+   $('bidCount').textContent='Connection ended';$('bidbutton').textContent='MATCH ENDED';
+   $('gameMessage').textContent='Start a new match to play again.';
  }
  else{
    $('actionHeading').innerHTML='Finding a rival<span>.</span>';
    $('actionHelp').textContent='Keep this tab open. The match will start as soon as your opponent joins.';
-   $('bidCount').textContent='MATCHMAKING';
-   $('bidStatus').textContent='● WAITING FOR PLAYER TWO';
-   $('bidbutton').textContent='WAITING';
+   $('bidCount').textContent='Matchmaking';
+   $('bidStatus').textContent='Waiting for another player';
+   $('bidbutton').textContent='Waiting';
    $('stageExplainer').textContent='Send the room code to a friend or wait for your opponent.';
-   $('gameMessage').textContent=activeMode==='find'?'SEARCHING FOR AN AVAILABLE OPPONENT…':'SHARE THE CODE ABOVE TO INVITE A FRIEND.';
+   $('gameMessage').textContent=activeMode==='find'?'Looking for another player…':'Share the room code with a friend.';
  }
  if(newPhase){lastPhase=phase;lastRound=r.round}
  if(phase==='left')notice('Opponent disconnected. Start a new match to continue.');
