@@ -26,7 +26,12 @@ function setAudioCaptureMode(on){
   audioCtx.resume().catch(()=>{});
  }
 }
-const BPM=114,STEP_SECONDS=60/BPM/4;
+let musicScene='menu';
+function setMusicScene(scene){
+ musicScene=scene==='match'?'match':'menu';
+ // Let the current phrase finish, but pick a new rhythm from the next bar.
+}
+const BPM=112,STEP_SECONDS=60/BPM/4;
 function audioReady(){
  if(audioCtx)return audioCtx;
  setIOSAudioSession();
@@ -116,34 +121,80 @@ function kick(t,level=.44,dest=musicBus){
 }
 function snare(t){noise(t,.15,.11,1250);osc(186,t,.10,.07,'triangle')}
 function hat(t,open=false){noise(t,open?.10:.038,open?.036:.021,6500)}
+// Eight-bar, originally composed harmonic progression: Am9 -> Fmaj7 -> Cmaj9
+// -> G6 -> Dm9 -> Fmaj9 -> Em7 -> E7 turnaround.
 const CHORDS=[
- {root:110,notes:[220,261.63,329.63,392],bass:55},
- {root:98,notes:[196,246.94,293.66,369.99],bass:49},
- {root:130.81,notes:[261.63,329.63,392,493.88],bass:65.406},
- {root:87.31,notes:[174.61,220,261.63,329.63],bass:43.65}
+ {bass:55,notes:[220,261.63,329.63,392],lead:[440,493.88,523.25,659.25,587.33]},
+ {bass:43.65,notes:[174.61,220,261.63,329.63],lead:[349.23,392,440,523.25,493.88]},
+ {bass:65.41,notes:[261.63,329.63,392,493.88],lead:[523.25,587.33,659.25,783.99,659.25]},
+ {bass:49,notes:[196,246.94,293.66,392],lead:[392,440,493.88,587.33,493.88]},
+ {bass:73.42,notes:[146.83,174.61,220,261.63],lead:[293.66,349.23,440,523.25,440]},
+ {bass:43.65,notes:[174.61,220,261.63,392],lead:[349.23,440,523.25,587.33,523.25]},
+ {bass:82.41,notes:[164.81,196,246.94,293.66],lead:[329.63,392,493.88,587.33,493.88]},
+ {bass:82.41,notes:[164.81,207.65,246.94,311.13],lead:[329.63,415.3,493.88,622.25,659.25]}
 ];
+const LEADS=[
+ [0,-1,1,-1,2,-1,3,2,0,-1,2,3,4,-1,3,1],
+ [0,-1,1,2,-1,3,-1,2,1,-1,4,3,-1,2,1,-1],
+ [0,-1,2,-1,1,3,2,-1,4,-1,3,2,1,2,-1,0],
+ [-1,1,0,-1,2,3,-1,4,3,-1,2,1,0,-1,1,-1]
+];
+function bassNote(t,freq,long=false){
+ const d=long?.40:.20;
+ osc(freq,t,d,.24,'triangle',musicBus,550);
+ osc(freq*2,t,d*.8,.047,'sawtooth',musicBus,420);
+}
+function softPad(t,notes,major){
+ notes.forEach((note,i)=>{
+  osc(note,t+.025+i*.012,major?1.7:1.2,.009,'sine',musicBus,1400);
+  osc(note/2,t+.030+i*.015,major?1.55:1.15,.0055,'triangle',musicBus,460);
+ });
+}
+function rim(t){noise(t,.047,.057,2550);osc(185,t,.036,.028,'triangle')}
+function subDrop(t){
+ const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+ o.type='sine';o.frequency.setValueAtTime(100,t);
+ o.frequency.exponentialRampToValueAtTime(36,t+.34);
+ g.gain.setValueAtTime(.001,t);g.gain.exponentialRampToValueAtTime(.28,t+.035);
+ g.gain.exponentialRampToValueAtTime(.001,t+.35);
+ o.connect(g).connect(musicBus);o.start(t);o.stop(t+.38);
+}
 function playStep(index,t){
- const beat=index%16,bar=Math.floor(index/16),chord=CHORDS[bar%4];
- if(beat===0||beat===8)kick(t,beat===0?.48:.36);
- if(beat===4||beat===12)snare(t);
- if(beat%2===0)hat(t,beat===6||beat===14);
- if(beat===3||beat===11)noise(t,.02,.016,7500);
- if([0,3,6,10,14].includes(beat)){
-  const bass=chord.bass*(beat===10?1.5:1);
-  osc(bass,t,.21,.20,'triangle',musicBus,700);
-  osc(bass*2,t,.15,.034,'sawtooth',musicBus,650);
- }
+ const beat=index%16,bar=Math.floor(index/16),section=Math.floor(bar/8)%4;
+ const chord=CHORDS[bar%CHORDS.length],inMatch=musicScene==='match';
+ const breakdown=section===3&&bar%8===7;
+ const variation=(bar%8===3||bar%8===7);
+ const soft=musicScene==='menu',ghost=bar%2===1;
  if(beat===0){
-  chord.notes.forEach((note,k)=>osc(note,t+.03+k*.003,1.65,.011,'sine',musicBus,1100));
+  kick(t,soft?.29:breakdown?.25:.43);
+  softPad(t,chord.notes,soft);
+  if(inMatch&&bar%4===0)subDrop(t);
  }
- const melody=[0,0,2,0,1,0,0,3,0,2,0,1,0,0,3,2];
- const degree=melody[beat];
- if(degree && beat%2===0){
-  const note=chord.notes[(degree+bar)%chord.notes.length]*2;
-  osc(note,t,.15,.046,'triangle',musicBus,2300);
-  osc(note*2,t,.065,.012,'sine');
+ if(inMatch&&beat===8&&!breakdown)kick(t,.35);
+ if(soft){
+  if(beat===8)rim(t);
+  if([2,6,10,14].includes(beat))hat(t);
+ }else{
+  if(beat===4||beat===12)snare(t);
+  if(beat%2===0&&!breakdown)hat(t,variation&&beat===14);
+  if([3,7,11,15].includes(beat)&&!breakdown)noise(t,.027,.018,7000);
+  if(ghost&&beat===10)rim(t);
+  if(variation&&beat===15)noise(t,.17,.042,2000);
  }
- if(beat===15&&bar%4===3)noise(t,.18,.035,2500);
+ const pattern=soft?[0,6,10,14]:[0,3,6,8,10,14];
+ if(pattern.includes(beat))bassNote(t,chord.bass*(beat===10?1.5:1),beat===0);
+ if(!breakdown&&((soft&&beat%2===0)||(inMatch&&[2,5,7,10,13].includes(beat)))){
+  const offset=(beat+bar)%chord.notes.length;
+  const note=chord.notes[offset]*(soft?1:2);
+  osc(note,t,.12,soft?.024:.035,'triangle',musicBus,soft?1600:3000);
+ }
+ const degree=LEADS[(bar+section)%LEADS.length][beat];
+ if(degree>=0&&!breakdown&&((soft&&beat%4===0)||(inMatch&&beat%2===0))){
+  const note=chord.lead[degree];
+  osc(note,t,soft?.20:.13,soft?.042:.064,'triangle',musicBus,2600);
+  if(inMatch&&variation)osc(note*2,t+.017,.062,.009,'sine',musicBus,3900);
+ }
+ if(inMatch&&beat===15&&bar%8===7){noise(t,.24,.075,2100);osc(987.77,t,.24,.038,'sine')}
 }
 function scheduler(){
  if(!musicOn||!audioCtx||audioCtx.state!=='running'||document.visibilityState==='hidden')return;
@@ -187,20 +238,23 @@ function playGameSfx(kind){
  try{
   switch(kind){
    case 'item':
-    noise(t,.27,.06,1700,fxBus);
-    [392,587.33,783.99,1174.66].forEach((n,i)=>osc(n,t+i*.09,.19,.14-(i*.015),'triangle',fxBus));
+    noise(t,.36,.11,1300,fxBus);
+    [261.63,392,523.25,783.99].forEach((n,i)=>osc(n,t+i*.085,.18,.13-(i*.012),'triangle',fxBus));
+    kick(t+.27,.19,fxBus);
     break;
    case 'bid':
     osc(430,t,.1,.18,'triangle',fxBus);
     osc(660,t+.075,.15,.16,'sine',fxBus);
     break;
    case 'outbid':
-    osc(440,t,.10,.13,'sine',fxBus);
-    osc(330,t+.10,.18,.14,'triangle',fxBus);
+    osc(622.25,t,.09,.14,'triangle',fxBus);
+    osc(415.3,t+.085,.16,.16,'triangle',fxBus);
+    noise(t+.04,.065,.045,3400,fxBus);
     break;
    case 'sold':
-    kick(t,.30,fxBus);noise(t,.10,.12,1300,fxBus);
-    osc(261.63,t+.13,.18,.11,'triangle',fxBus);
+    // Three short auction-gavel-like wooden thuds followed by a warm bell.
+    [0,.085,.16].forEach((delay,i)=>{kick(t+delay,.29-(i*.07),fxBus);noise(t+delay,.035,.11-(i*.018),850,fxBus)});
+    osc(523.25,t+.23,.37,.11,'sine',fxBus);
     break;
    case 'win':
     [392,493.88,587.33,783.99].forEach((n,i)=>osc(n,t+i*.095,.25,.16,'triangle',fxBus));
