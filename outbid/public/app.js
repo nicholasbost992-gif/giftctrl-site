@@ -116,6 +116,38 @@ function setArtwork(name){
  if(photo.dataset.src!==url){photo.dataset.src=url;photo.classList.add('hidden');fall.classList.remove('hidden');photo.src=url}
  else if(photo.complete&&photo.naturalWidth>0){photo.classList.remove('hidden');fall.classList.add('hidden')}
 }
+// Lightweight visual feedback for each new auction lot and competing bids.
+let introHideTimer=null,bidHideTimer=null,lastBidCount=0,lastBidRound=0,lastTickCue='';
+function showLotIntro(r){
+ const lot=r.lot;if(!lot)return;
+ const el=$('lotIntro'),photo=$('lotIntroPhoto'),fallback=$('lotIntroFallback');
+ $('lotIntroRound').textContent=String(r.round).padStart(2,'0')+' / 05';
+ $('lotIntroTitle').textContent=lot.name;
+ $('lotIntroCondition').textContent=lot.condition+' · NEW LOT';
+ const id=imageData[lot.name]?.[0];
+ fallback.textContent=lot.emoji||'✦';
+ if(id){
+  const src='https://images.unsplash.com/'+id+'?auto=format&fit=crop&w=800&q=80';
+  photo.classList.add('hidden');fallback.classList.remove('hidden');
+  photo.onload=()=>{photo.classList.remove('hidden');fallback.classList.add('hidden')};
+  photo.onerror=()=>{photo.classList.add('hidden');fallback.classList.remove('hidden')};
+  photo.src=src;
+ }else{photo.removeAttribute('src');photo.classList.add('hidden');fallback.classList.remove('hidden')}
+ clearTimeout(introHideTimer);
+ el.classList.remove('is-visible');
+ void el.offsetWidth; // Restart keyframe animation on every round.
+ el.classList.add('is-visible');el.setAttribute('aria-hidden','false');
+ introHideTimer=setTimeout(()=>{el.classList.remove('is-visible');el.setAttribute('aria-hidden','true')},1600);
+}
+function flashBid(r){
+ const el=$('bidImpact');
+ $('bidImpactText').textContent=(r.leader===r.you?'YOU BID ':'RIVAL BID ')+money(r.highBid||0);
+ el.classList.toggle('your-bid',r.leader===r.you);
+ clearTimeout(bidHideTimer);el.classList.remove('is-visible');void el.offsetWidth;
+ el.classList.add('is-visible');el.setAttribute('aria-hidden','false');
+ bidHideTimer=setTimeout(()=>{el.classList.remove('is-visible');el.setAttribute('aria-hidden','true')},900);
+}
+
 function render(){
  if(!state)return;
  const r=state,players=r.players||[],you=players.find(p=>p.id===r.you),them=players.find(p=>p.id!==r.you);
@@ -126,6 +158,24 @@ function render(){
    el.className=i+1<r.round?'finished':i+1===r.round?'active':'';
  });
  const phase=r.phase, newPhase=phase!==lastPhase||r.round!==lastRound;
+ if(phase==='bid'){
+  if(newPhase||r.round!==lastBidRound){
+   lastBidRound=r.round;lastBidCount=0;lastTickCue='';
+   showLotIntro(r);playGameSfx('item');
+  }
+  if((r.bidCount||0)>lastBidCount){
+   flashBid(r);
+   playGameSfx(r.leader===r.you?'bid':'outbid');
+  }
+  lastBidCount=r.bidCount||0;
+ }else if(newPhase&&phase==='reveal'){
+  const winnerIsYou=r.result?.winnerId===r.you;
+  playGameSfx(winnerIsYou?'win':'sold');
+ }else if(newPhase&&phase==='done'){
+  const a=players[0],b=players[1];
+  const winning=a&&b?((a.cash+a.collection)===(b.cash+b.collection)?null:(a.cash+a.collection)>(b.cash+b.collection)?a:b):null;
+  playGameSfx(winning?.id===r.you?'win':'loss');
+ }
  if(newPhase && phase==='bid')lockedLocally=false;
  $('phaseLabel').textContent=({wait:'Waiting for opponent',bid:'Bidding',reveal:'Lot sold',done:'Match finished',left:'Opponent left'})[phase]||phase.toUpperCase();
  $('stageState').textContent=({wait:'Waiting',bid:'Live',reveal:'Sold',done:'Final',left:'Ended'})[phase]||'—';
@@ -161,7 +211,7 @@ function render(){
    $('bidStatus').textContent=isLeading?'You have the highest bid':pricedOut?'Not enough cash for another bid':'Raise your hand or use the button to bid again';
    $('stageExplainer').textContent='24-second auctions. Last-second bids briefly extend the clock.';
    $('gameMessage').textContent=isLeading?'You’re in the lead. Watch for a new bid.':highBid?'Your rival is ahead. Raise your bid.':'The auction is open. Make the first bid.';
-   if(newPhase){$('amount').value='';if(musicOn)playAccent(440)}
+   if(newPhase){$('amount').value=''}
    else if(isLeading){$('amount').value=''}
    else if(highBid>0&&Number($('amount').value)<minimum&&minimum<=cash){$('amount').value=String(minimum)}
  }
@@ -177,7 +227,6 @@ function render(){
    $('stageExplainer').textContent='The true lot value has been revealed.';
    $('bidbutton').textContent='Next round soon';
    $('gameMessage').textContent='Next lot coming up…';
-   if(newPhase&&musicOn)playAccent(won?660:260);
  }
  else if(phase==='done'){
    const a=players[0],b=players[1],aNet=a?(a.cash+a.collection):0,bNet=b?(b.cash+b.collection):0;
@@ -219,6 +268,7 @@ function updateClock(){
  $('timer').innerHTML=(duration?String(seconds).padStart(2,'0'):'--')+'<small>s</small>';
  $('timerFill').style.width=duration?Math.max(0,Math.min(100,remaining/duration*100))+'%':'0%';
  $('timerFill').style.background=remaining<5000&&r.phase==='bid'?'#fa927b':'var(--acid)';
+ if(r.phase==='bid'&&seconds>0&&seconds<=3){const cue=r.code+':'+r.round+':'+seconds;if(lastTickCue!==cue){lastTickCue=cue;playGameSfx('tick')}}
 }
 setInterval(updateClock,100);
 function bid(){
@@ -230,7 +280,7 @@ function bid(){
  lockedLocally=true;
  socket.emit('bid',amt);
  notice('BID PLACED — '+money(amt));
- playAccent(370);render();
+ playGameSfx('click');render();
 }
 $('bidbutton').addEventListener('click',bid);
 $('amount').addEventListener('keydown',e=>{if(e.key==='Enter')bid()});
@@ -256,7 +306,7 @@ document.querySelectorAll('[data-bid]').forEach(button=>button.addEventListener(
 }));
 $('appraiseBtn').addEventListener('click',()=>{
  if(!state||state.phase!=='bid'||state.appraisal)return;
- socket.emit('appraise');
+ socket.emit('appraise');playGameSfx('scan');
  notice('APPRAISAL REQUESTED · THIS COSTS '+money(state.appraisalCost||300)+' IN GAME CASH');
 });
 function sendChat(e){if(e)e.preventDefault();let v=$('chatinput').value.trim();if(!v||!state)return;socket.emit('chat',v);$('chatinput').value=''}
@@ -300,58 +350,3 @@ async function refreshPro(){
 $('proButton').addEventListener('click',async()=>{try{const r=await request('/api/pro/checkout',{method:'POST'});location.href=r.url}catch(e){notice(e.message)}});
 $('portalButton').addEventListener('click',async()=>{try{const r=await request('/api/pro/portal',{method:'POST'});location.href=r.url}catch(e){notice(e.message)}});
 refreshPro();
-/* Original in-browser instrumental. User gesture required by mobile audio policies. */
-let audioCtx=null,musicOn=false,musicTimer=null,step=0,musicBus=null;
-function audioReady(){
- if(!audioCtx){
-   audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-   musicBus=audioCtx.createGain();musicBus.gain.value=.38;
-   const compressor=audioCtx.createDynamicsCompressor();compressor.threshold.value=-18;compressor.ratio.value=3;
-   musicBus.connect(compressor);compressor.connect(audioCtx.destination);
- }
-}
-function synth(freq,t,len,vol,wave='triangle'){
- const oscillator=audioCtx.createOscillator(),gain=audioCtx.createGain();
- oscillator.type=wave;oscillator.frequency.setValueAtTime(freq,t);
- gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(Math.max(.001,vol),t+.009);
- gain.gain.exponentialRampToValueAtTime(.0001,t+len);
- oscillator.connect(gain).connect(musicBus);
- oscillator.start(t);oscillator.stop(t+len+.01);
-}
-function kick(t){
- const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';
- o.frequency.setValueAtTime(132,t);o.frequency.exponentialRampToValueAtTime(42,t+.17);
- g.gain.setValueAtTime(.8,t);g.gain.exponentialRampToValueAtTime(.001,t+.23);
- o.connect(g).connect(musicBus);o.start(t);o.stop(t+.24);
-}
-function noiseHit(t,kind){
- const len=kind==='snare'?.14:.06,buff=audioCtx.createBuffer(1,Math.round(audioCtx.sampleRate*len),audioCtx.sampleRate),samples=buff.getChannelData(0);
- for(let i=0;i<samples.length;i++)samples[i]=Math.random()*2-1;
- const src=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),g=audioCtx.createGain();
- src.buffer=buff;filter.type='highpass';filter.frequency.value=kind==='snare'?1200:7000;
- g.gain.setValueAtTime(kind==='snare'?.24:.075,t);g.gain.exponentialRampToValueAtTime(.001,t+len);
- src.connect(filter).connect(g).connect(musicBus);src.start(t);src.stop(t+len);
-}
-function musicTick(){
- if(!musicOn||!audioCtx)return;
- const t=audioCtx.currentTime+.025,n=step%16,bars=[98,116.54,87.31,130.81],root=bars[Math.floor(step/16)%bars.length];
- if(n%4===0)kick(t);
- if(n===4||n===12)noiseHit(t,'snare');
- if(n%2===0)noiseHit(t,'hat');
- if([0,3,6,8,11,14].includes(n))synth(root*(n===11?1.5:1),t,.23,.14,'sawtooth');
- if([0,7,10].includes(n))synth(root*4,t,.42,.055,'triangle');
- step++;
-}
-async function toggleMusic(){
- try{
-   audioReady();
-   if(musicOn){musicOn=false;clearInterval(musicTimer);await audioCtx.suspend()}
-   else{await audioCtx.resume();musicOn=true;musicTick();musicTimer=setInterval(musicTick,150)}
-   $('soundText').textContent=musicOn?'SOUND ON':'SOUND OFF';
-   $('soundIcon').textContent=musicOn?'♫':'♪';
-   $('musicToggle').setAttribute('aria-pressed',String(musicOn));
-   notice(musicOn?'SOUND ON':'SOUND OFF');
- }catch(e){notice('Audio is unavailable in this browser.')}
-}
-$('musicToggle').addEventListener('click',toggleMusic);
-function playAccent(freq){if(!audioCtx||!musicOn||audioCtx.state!=='running')return;try{synth(freq,audioCtx.currentTime,.14,.07,'triangle')}catch(e){}}
