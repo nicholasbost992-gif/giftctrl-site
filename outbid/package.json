@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "check": "node --check server.js && node --check items.js && node --check tests/items.js && node --check public/soundscape.js && node --check public/app.js && node --check public/hand-gesture.js && node --check public/video.js && node --check tests/smoke.js && node --check tests/soundscape.js && node --check tests/gesture.js && node --check tests/auction-integration.js && node tests/items.js && node tests/smoke.js && node tests/soundscape.js && node tests/gesture.js && node tests/auction-integration.js",
+    "check": "node --check server.js && node --check items.js && node --check visuals.js && node --check tests/items.js && node --check public/soundscape.js && node --check public/app.js && node --check public/hand-gesture.js && node --check public/video.js && node --check tests/smoke.js && node --check tests/soundscape.js && node --check tests/gesture.js && node --check tests/auction-integration.js && node tests/items.js && node tests/smoke.js && node tests/soundscape.js && node tests/gesture.js && node tests/auction-integration.js",
     "postinstall": "npm run check",
     "start": "node server.js"
   },
