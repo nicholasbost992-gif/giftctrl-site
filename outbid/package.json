@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "check": "node --check server.js && node --check public/app.js",
+    "postinstall": "npm run check",
     "start": "node server.js"
   },
   "dependencies": {
