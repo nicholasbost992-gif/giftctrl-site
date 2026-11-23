@@ -46,6 +46,21 @@ function closePreflight(){
  window.stopOutbidLobbyCamera?.();
  $('openCameraCheck').focus();
 }
+function toggleSiteMenu(open){
+ $('arenaMenuPanel').classList.toggle('hidden',!open);
+ $('arenaMenuButton').setAttribute('aria-expanded',String(open));
+}
+$('arenaMenuButton').addEventListener('click',()=>toggleSiteMenu($('arenaMenuPanel').classList.contains('hidden')));
+document.addEventListener('click',e=>{
+ if(!e.target.closest('.arena-menu-wrapper'))toggleSiteMenu(false);
+});
+$('arenaMenuPanel').addEventListener('click',e=>{if(e.target.closest('button'))toggleSiteMenu(false)});
+$('copyShareLink').addEventListener('click',async()=>{
+ const url='https://is.gd/outbid1v1';
+ try{await navigator.clipboard.writeText(url);notice('OUTBID LINK COPIED')}
+ catch(e){window.prompt('Copy the OUTBID link:',url)}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleSiteMenu(false)});
 $('openCameraCheck').addEventListener('click',()=>openPreflight());
 $('cameraCheckCard').addEventListener('click',()=>openPreflight());
 $('practiceCard').addEventListener('click',()=>$('playBot').click());
