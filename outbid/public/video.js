@@ -146,7 +146,7 @@ async function enableCamera(){
   let stream;
   try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480},frameRate:{ideal:18,max:25}},audio:{echoCancellation:true,noiseSuppression:true}})}
   catch(err){
-   if(err.name==='NotAllowedError'){throw err}
+   // If the microphone is blocked or absent, retry with camera only.
    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
   }
   cameraStream=stream;localCameraEnabled=stream.getVideoTracks().some(t=>t.enabled);localMicEnabled=stream.getAudioTracks().some(t=>t.enabled);
@@ -240,6 +240,7 @@ $('reportMatch').addEventListener('click',()=>{
  notice('REPORT SUBMITTED. LEAVING MATCH.');
  setTimeout(()=>location.reload(),300);
 });
+otherVideo.addEventListener('click',()=>otherVideo.play().catch(()=>{}));
 window.addEventListener('pagehide',()=>{
  if(cameraStream)cameraStream.getTracks().forEach(t=>t.stop());
  if(videoPeer)videoPeer.close();
