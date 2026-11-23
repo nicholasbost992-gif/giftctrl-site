@@ -1,4 +1,5 @@
 'use strict';
+const {visualFor}=require('./visuals');
 // OUTBID's curated collectible bank. Prices are fictional in-game estimates, not real-world appraisals.
 // Every lot has a distinct human-written name; no fake numbered reskins or placeholder suffixes.
 const catalog = [
@@ -96,18 +97,32 @@ function stableHash(text){
  for(const char of text){h^=char.charCodeAt(0);h=Math.imul(h,16777619)}
  return h>>>0;
 }
-const ITEMS=Object.freeze(catalog.flatMap(([category,emoji,image,low,high,names])=>
+const mainItems=catalog.flatMap(([category,emoji,_image,low,high,names])=>
  names.split('|').map(name=>{
   const fraction=(stableHash(name+'|'+category)%10001)/10000;
   const base=Math.max(100,Math.round((low+(high-low)*fraction)/100)*100);
-  return Object.freeze({name,base,emoji,category,image});
+  return Object.freeze({name,base,category,...visualFor({name,category,emoji})});
  })
-));
-const categoriesCount=catalog.length;
+);
+// One hundred low-value or unusable auction finds, some literally worth $0.
+// Fictional in-game values only, not genuine appraisal prices.
+const JUNK_NAMES="Cracked Budget Android Phone|Water-Damaged Flip Phone|Phone Without a Screen|Scratched Tablet With Dead Battery|Ancient Wi-Fi Router|Router Without Power Cable|Unbranded Smartwatch With No Charger|Broken Laptop Hinge|Laptop With Missing Keys|Keyboard With Stuck Spacebar|Mouse With Broken Scroll Wheel|Burned-Out PC Fan|Bent Computer Case Panel|Unlabeled RAM Stick|Old Computer Power Supply|Monitor With Purple Lines|Monitor With Cracked Screen|Printer Without Ink|Jam-Prone Office Printer|Broken Paper Shredder|Worn Out USB Hub|Tangled Phone Charger Bag|Frayed HDMI Cables|Dead Power Bank|Scratched Plastic Phone Cases|Single Bluetooth Earbud|Headphones With One Side Working|Blown Desktop Subwoofer|Rattling Cheap Speaker|Old Car Radio With No Knobs|Cassette Player Without Door|Broken Handheld Console|Controller With Stick Drift|Controller Missing Buttons|Half a Board Game|Empty Trading Card Tin|Bent Trading Card Binder|Torn Comic Book Cover|Sun-Faded Video Game Poster|Loose Arcade Button|Plastic Trophy Without Base|Deflated Basketball|Worn Baseball Glove|Broken Tennis Racket Frame|Single Roller Skate|Bent Bicycle Wheel|Rusty Bike Chain|Worn E-Moto Tire|Damaged Electric Scooter Battery|Scratched Scooter Deck|Broken Bike Light|Bent Footpeg|Rusty Motorcycle Mirror|Cracked Helmet Visor|Car Bumper With Scratches|Loose Car Headlight Housing|One Used Hubcap|Rusty Car License Plate Frame|Leaking Wiper Fluid Bottle|Broken Car Key Fob|Bent Socket Wrench|Incomplete Tool Set|Stripped Screwdriver Bundle|Rusty Hex Key Set|Tiny Broken Drill Bit Set|Paint-Spattered Tool Box|Dead Flashlight|Damaged Extension Cord|Cheap Desk Lamp With No Bulb|Wobbly Office Chair|Cracked Plastic Storage Bin|Empty Glass Display Case|Bent Picture Frame|Dusty Fake Houseplant|Faded Decorative Throw Pillow|Torn Rug Corner|Scratched Wall Clock|Mismatched Coffee Cups|Chipped Ceramic Mug|Used Air Fryer Basket|Broken Blender Lid|Greasy Frying Pan|Bent Baking Tray|Unmarked Plastic Water Bottle|One Worn Leather Belt|Fake Designer Belt|Broken Purse Zipper|Scratched Sunglasses|Shoe Without Its Pair|Worn Canvas Backpack|Damaged Travel Suitcase Wheel|Faded Graphic T-Shirt|Single Winter Glove|Empty Watch Box|Plastic Jewelry Chain|Cheap Costume Ring|Cracked Phone Tripod|Bent Camera Lens Cap|Old Paper Map|Mystery Bag of Random Screws";
+const junkItems=JUNK_NAMES.split('|').map(name=>{
+ const category='JUNK & BROKEN';
+ const base=(stableHash(name+'junk')%6===0)?0:Math.round(((stableHash(name+'low')%180)+1)/10)*10;
+ return Object.freeze({name,category,base,junk:true,...visualFor({name,category,emoji:'🗑️',junk:true})});
+});
+const ITEMS=Object.freeze([...mainItems,...junkItems]);
+const categoriesCount=catalog.length+1;
 const conditionOptions=[
  {label:'ROUGH',min:.32,max:.64,notes:['SOLD AS-IS · Has visible wear','INSPECTION NOTE · Condition uncertain','SELLER SAYS · May need repair','COLLECTOR NOTE · Not fully tested']},
  {label:'USED',min:.68,max:1.05,notes:['INSPECTED · Ordinary wear','SELLER SAYS · Appears complete','AUCTION NOTE · Previously owned','INSPECTION NOTE · Working condition not guaranteed']},
  {label:'PRISTINE',min:1.07,max:1.62,notes:['COLLECTOR NOTE · Excellent condition claimed','INSPECTION NOTE · Very well preserved','SELLER SAYS · Scarce configuration','AUCTION NOTE · Near-new presentation']}
+];
+const junkConditions=[
+ {label:'BROKEN',factor:0,notes:['SALVAGE ONLY · Not working','SELLER WARNING · Worthless as-is','AUCTION NOTE · No salvage value claimed']},
+ {label:'SCRAP',factor:.4,notes:['AS-IS · Might have some spare parts','INSPECTOR NOTE · Poor condition','SCRAP LOT · Limited resale potential']},
+ {label:'USED',factor:1,notes:['LOW VALUE · Heavily worn','SELLER SAYS · Working condition unknown','CHEAP FIND · Check defects carefully']}
 ];
 const recentItems=[];
 const MAX_RECENT=120;
@@ -122,14 +137,27 @@ function select(pool,usedCats,selected){
  return chosen;
 }
 function makeLots(){
- const low=ITEMS.filter(i=>i.base<=3000);
- const mid=ITEMS.filter(i=>i.base>3000&&i.base<=10000);
- const high=ITEMS.filter(i=>i.base>10000);
+ const junk=ITEMS.filter(i=>i.junk);
+ const cheap=ITEMS.filter(i=>!i.junk&&i.base<=1200);
+ const middle=ITEMS.filter(i=>!i.junk&&i.base>1200&&i.base<=8000);
+ const premium=ITEMS.filter(i=>!i.junk&&i.base>8000);
  const usedCats=new Set(),selected=new Set();
- const chosen=[select(low,usedCats,selected),select(mid,usedCats,selected),select(high,usedCats,selected),select(mid,usedCats,selected),select(ITEMS,usedCats,selected)];
+ const chosen=[
+  select(junk,usedCats,selected),
+  select(cheap,usedCats,selected),
+  select(middle,usedCats,selected),
+  select(middle,usedCats,selected),
+  select(premium,usedCats,selected)
+ ];
  if(chosen.some(x=>!x))throw new Error('Auction catalog lacks the required pool diversity');
  for(let i=chosen.length-1;i>0;i--){const j=randomInt(i+1);[chosen[i],chosen[j]]=[chosen[j],chosen[i]]}
  const lots=chosen.map(item=>{
+  if(item.junk){
+   const q=junkConditions[randomInt(junkConditions.length)];
+   const value=Math.max(0,Math.round(item.base*q.factor/10)*10);
+   return {name:item.name,value,emoji:item.emoji,category:item.category,image:item.image,junk:true,
+    clue:q.notes[randomInt(q.notes.length)],condition:q.label};
+  }
   const q=conditionOptions[randomInt(conditionOptions.length)];
   const value=Math.max(100,Math.round(item.base*(q.min+Math.random()*(q.max-q.min))/100)*100);
   return {name:item.name,value,emoji:item.emoji,category:item.category,image:item.image,
@@ -139,4 +167,5 @@ function makeLots(){
  if(recentItems.length>MAX_RECENT)recentItems.splice(0,recentItems.length-MAX_RECENT);
  return lots;
 }
+
 module.exports={ITEMS,makeLots,categoriesCount};
