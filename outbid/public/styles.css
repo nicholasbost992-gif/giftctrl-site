@@ -464,3 +464,15 @@ body{background:#08080d;color:var(--text)}
  .preflight-note{padding:0 15px 15px;font-size:10px}
 }
 @media(max-width:365px){.arena-primary-cta{letter-spacing:.7px;font-size:11px}.arena-feature-card{gap:9px}.arena-feature-copy strong{font-size:11px}}
+
+/* Compact app menu; keep the short, verified link easy to copy. */
+.arena-menu-wrapper{position:relative;display:flex;align-items:center}
+.arena-menu-button{width:47px;height:39px;border:1px solid #5c4b72;border-radius:13px;background:#13101e;color:#d8d1eb;display:grid;place-items:center}
+.arena-menu-button:hover,.arena-menu-button[aria-expanded=true]{background:#241b35;border-color:#9376b1}
+.arena-menu-panel{position:absolute;right:0;top:46px;width:208px;z-index:65;border:1px solid #5c506e;background:#191523;box-shadow:0 12px 30px #000b;border-radius:13px;padding:7px}
+.arena-menu-panel button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;padding:12px;background:none;border:0;border-radius:7px;text-align:left;color:#e2daed;font-size:13px}
+.arena-menu-panel button:hover{background:#2d2440}
+.arena-menu-panel button #soundIcon{margin-right:6px}
+.arena-menu-panel button #soundText{flex:1}
+.arena-menu-url{padding:10px 12px 8px;color:#a58ac6;border-top:1px solid #3b304e;font-size:11px;letter-spacing:.2px}
+body.preflight-open{overflow:hidden}
