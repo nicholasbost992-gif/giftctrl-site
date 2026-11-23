@@ -85,7 +85,7 @@ function start(r){
  r.endsAt=Date.now()+BASE_BID_TIME;
  const bot=r.players.find(p=>p.id==='bot');
  if(bot)r.botCeiling=Math.min(bot.cash,Math.max(100,Math.round(
-    r.lots[r.round].value*(0.45+Math.random()*0.85)/100)*100));
+    r.lots[r.round].value*(0.45+Math.random()*0.85)/100)*100,500));
  emit(r);scheduleRoundEnd(r);scheduleBot(r);
 }
 function placeBid(r,player,n){
