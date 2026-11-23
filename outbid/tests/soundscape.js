@@ -48,6 +48,8 @@ assert.equal(session.type,'playback','iPhone silent-mode category should allow p
 vm.runInContext('setAudioCaptureMode(true)',sandbox);
 assert.equal(session.type,'play-and-record','Mic capture must switch to a compatible audio session');
 vm.runInContext('setAudioCaptureMode(false)',sandbox);
+vm.runInContext("setMusicScene('match');playStep(17,0.2);setMusicScene('menu');playStep(25,0.3)",sandbox);
+assert.equal(vm.runInContext('musicScene',sandbox),'menu','Scene switching must preserve music mode');
 assert.equal(session.type,'playback','Audio should return to silent-mode-compatible playback after capture');
 vm.runInContext("setMusicDucking(true);playGameSfx('item');playGameSfx('bid');playGameSfx('outbid');playGameSfx('sold');playGameSfx('win');playGameSfx('loss');playGameSfx('tick');playGameSfx('scan');",sandbox,{timeout:2000});
 assert.ok(notes>=20,'Original music and game sound cues should schedule audio notes');
