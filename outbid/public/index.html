@@ -11,11 +11,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css?v=10">
 <script defer src="/socket.io/socket.io.js"></script>
-<script defer src="/soundscape.js?v=2"></script>
+<script defer src="/soundscape.js?v=3"></script>
 <script defer src="/app.js?v=9"></script>
 <script defer src="/hand-gesture.js?v=1"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
-<script defer src="/video.js?v=2"></script>
+<script defer src="/video.js?v=3"></script>
 </head>
 <body>
 
@@ -23,7 +23,7 @@
   <a class="wordmark arena-wordmark" href="/" aria-label="Outbid home"><span class="arena-wordmark-symbol">◆</span><span>OUTBID</span></a>
   <div class="arena-menu-wrapper"><button id="arenaMenuButton" class="arena-menu-button" aria-expanded="false" aria-controls="arenaMenuPanel" aria-label="Open site menu" type="button"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <div id="arenaMenuPanel" class="arena-menu-panel hidden">
-      <button id="musicToggle" type="button" aria-pressed="false"><span id="soundIcon">♪</span><span id="soundText">Sound off</span></button>
+      <button id="musicToggle" type="button" aria-pressed="true"><span id="soundIcon">♫</span><span id="soundText">Music on</span></button>
       <button id="effectsToggle" type="button" aria-pressed="true">Sound effects on</button>
       <label class="menu-volume-label" for="musicVolume">Music volume <input id="musicVolume" type="range" min="0" max="100" step="5" value="65" aria-label="Music volume"></label>
       <button id="proNav" type="button">OUTBID Pro</button>
@@ -48,7 +48,7 @@
       <svg viewBox="0 0 24 24" width="21" height="21" stroke="currentColor" fill="none" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="14" height="14" rx="3"/><path d="m16 9 6-4v14l-6-4"/></svg>
       START CAMERA CHECK
     </button>
-    <button id="homeSoundButton" type="button" class="arena-music-prompt" aria-pressed="false">♪ Play soundtrack</button>
+    <button id="homeSoundButton" type="button" class="arena-music-prompt" aria-pressed="true">♫ Soundtrack on</button>
   </div>
   <div class="arena-feature-list">
     <button type="button" id="cameraCheckCard" class="arena-feature-card"><span class="arena-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="5" width="14" height="14" rx="3"/><path d="m16 9 6-4v14l-6-4"/></svg></span><span class="arena-feature-copy"><strong>CAMERA CHECK</strong><small>Check your video and audio before joining.</small></span><span class="arena-chevron">›</span></button>
@@ -89,7 +89,7 @@
   <div id="bidImpact" class="bid-impact" aria-hidden="true"><span id="bidImpactText">New bid</span></div>
   <div class="game-toolbar">
     <div class="game-toolbar-left"><button id="leaveMatch" class="back-button" type="button">← LEAVE</button><span class="toolbar-divider"></span><span id="phaseLabel" class="phase-label">CONNECTING</span></div>
-    <div class="game-toolbar-right"><button id="gameSoundButton" class="match-music-toggle" type="button" aria-pressed="false">♪ Music off</button><span id="roomInfo">ROOM —</span><button id="copyRoom" class="copy-button" type="button">COPY CODE ⧉</button><button id="reportMatch" class="report-button" type="button">REPORT / LEAVE</button></div>
+    <div class="game-toolbar-right"><button id="gameSoundButton" class="match-music-toggle" type="button" aria-pressed="true">♫ Music on</button><span id="roomInfo">ROOM —</span><button id="copyRoom" class="copy-button" type="button">COPY CODE ⧉</button><button id="reportMatch" class="report-button" type="button">REPORT / LEAVE</button></div>
   </div>
   <div class="score-ribbon">
     <div class="ribbon-player you"><div class="score-identity"><span class="score-avatar" id="youInitial">Y</span><div><span class="score-role">YOU</span><strong id="youName">Player</strong></div></div><div class="score-amount"><small>NET WORTH</small><strong id="youNet">$10,000</strong><span id="youDetails">Cash $10,000 · Items $0</span></div></div>
