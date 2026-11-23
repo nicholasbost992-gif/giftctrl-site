@@ -56,7 +56,7 @@ document.addEventListener('click',e=>{
 });
 $('arenaMenuPanel').addEventListener('click',e=>{if(e.target.closest('button'))toggleSiteMenu(false)});
 $('copyShareLink').addEventListener('click',async()=>{
- const url='https://is.gd/outbid1v1';
+ const url='https://outbid-olee.onrender.com';
  try{await navigator.clipboard.writeText(url);notice('OUTBID LINK COPIED')}
  catch(e){window.prompt('Copy the OUTBID link:',url)}
 });
