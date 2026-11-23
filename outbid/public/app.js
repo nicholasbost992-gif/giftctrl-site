@@ -3,8 +3,7 @@
 const $ = id => document.getElementById(id);
 const socket = io({reconnection:true,reconnectionAttempts:15});
 let state=null,activeMode='',lastPhase='',lastRound=0,toastTimeout=null,lockedLocally=false;
-let peer=null,localStream=null,remoteEnabled=false,muted=false,queuedCandidates=[];
-const rtcConfig={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+let selectedRaise=100;
 const imageData={
  'Mystery Supercar':['photo-1503376780353-7e6692767b70','AUTOMOTIVE'],
  'Old Watch':['photo-1523275335684-37898b6baf30','WATCHES'],
@@ -93,8 +92,13 @@ function render(){
  $('stageEyebrow').textContent='LOT '+String(Math.min(r.round,5)).padStart(3,'0')+' / 005';
  const item=r.lot?.name||r.result?.item||'The table is ready';
  $('itemName').textContent=phase==='wait'?'Waiting for your opponent':phase==='left'?'Match ended':phase==='done'?'Auction complete':item;
+ $('lotClue').textContent=r.lot?.clue||'A new item is coming to the table.';
  setArtwork(phase==='wait'||phase==='left'||phase==='done'?null:item);
  $('resultPanel').classList.toggle('hidden',phase!=='reveal'&&phase!=='done'&&phase!=='left');
+ const scan=r.appraisal,scansRemaining=Number(r.scansRemaining)||0,scanCost=Number(r.appraisalCost)||300;
+ $('appraisalResult').textContent=scan?'ESTIMATE: '+money(scan.low)+' – '+money(scan.high):scansRemaining+' SCAN'+(scansRemaining===1?'':'S')+' LEFT · '+money(scanCost)+' EACH';
+ $('appraiseBtn').disabled=phase!=='bid'||!!scan||scansRemaining<=0||(you?.cash||0)<scanCost;
+ $('appraiseBtn').textContent=scan?'ESTIMATE REVEALED':scansRemaining<=0?'NO SCANS LEFT':'APPRAISE ↗';
  const isLeading=phase==='bid'&&r.leader===r.you;
  const highBid=Number(r.highBid)||0,minimum=Number(r.minBid)||highBid+100,cash=you?.cash||0;
  const canBid=phase==='bid'&&!isLeading&&!lockedLocally&&minimum<=cash;
@@ -110,12 +114,12 @@ function render(){
  $('amount').placeholder=String(minimum);
  if(phase==='bid'){
    const pricedOut=minimum>cash;
-   $('actionHeading').innerHTML=isLeading?'You’re leading<span>.</span>':pricedOut?'Out of cash<span>.</span>':'Raise the bid<span>.</span>';
-   $('actionHelp').textContent=isLeading?'You are winning this lot. Stay ready — the other bidder can raise it.':pricedOut?'Your rival has bid more than your remaining cash. Watch this round finish.':highBid?'Your rival is leading. Bid at least '+money(minimum)+' to take the lead.':'You can start the bidding at '+money(minimum)+'. Keep raising until time runs out.';
+   $('actionHeading').innerHTML=isLeading?'You’re winning<span>.</span>':pricedOut?'Out of cash<span>.</span>':'Raise your hand<span>.</span>';
+   $('actionHelp').textContent=isLeading?'Hold on to your lead — if your rival raises, drop your hand then raise it again.':pricedOut?'Your rival has bid more than your available cash.':highBid?'Your rival is leading. Open your palm or use the button to bid '+money(minimum)+' or more.':'Show an open palm above your shoulder for one second, or tap BID.';
    $('bidCount').textContent=(r.bidCount||0)+' TOTAL BID'+(r.bidCount===1?'':'S');
-   $('bidbutton').innerHTML=isLeading?'HIGHEST BIDDER ✓':pricedOut?'NOT ENOUGH CASH':lockedLocally?'PLACING BID…':'RAISE TO WIN <span>→</span>';
+   $('bidbutton').innerHTML=isLeading?'HIGHEST BIDDER ✓':pricedOut?'NOT ENOUGH CASH':lockedLocally?'PLACING BID…':'BID WITH BUTTON <span>→</span>';
    $('bidStatus').textContent=isLeading?'● YOU ARE CURRENTLY WINNING':pricedOut?'● YOUR BUDGET IS BELOW THE NEXT BID':'● YOU CAN BID AGAIN IF YOUR RIVAL OUTBIDS YOU';
-   $('stageExplainer').textContent='The highest live bid wins when the clock hits zero.';
+   $('stageExplainer').textContent='24-second auctions. Last-second bids briefly extend the clock.';
    $('gameMessage').textContent=isLeading?'YOU ARE IN THE LEAD. HOLD ON.':highBid?'OUTBID YOUR RIVAL BEFORE TIME RUNS OUT.':'THE AUCTION IS OPEN — MAKE THE FIRST BID.';
    if(newPhase){$('amount').value='';if(musicOn)playAccent(440)}
    else if(isLeading){$('amount').value=''}
@@ -125,9 +129,9 @@ function render(){
    const result=r.result||{},value=result.value||0,delta=value-(result.price||0),won=you&&result.winner===you.name;
    $('resultLabel').textContent=won?'YOU WON THE LOT':'LOT SOLD';
    $('resultValue').textContent=money(value);
-   $('resultDetail').textContent='Won by '+String(result.winner||'Nobody')+' for '+money(result.price||0)+' · '+(delta>=0?'+':'−')+money(Math.abs(delta))+' value';
+   $('resultDetail').textContent='Won by '+String(result.winner||'Nobody')+' for '+money(result.price||0)+' · '+(delta>=0?'+':'−')+money(Math.abs(delta))+' profit';
    $('actionHeading').innerHTML='Bids are in<span>.</span>';
-   $('actionHelp').textContent='Real value: '+money(value)+'. Next lot in a moment.';
+   $('actionHelp').textContent='This lot is actually worth '+money(value)+'. '+(delta>=0?'The winner made a profit.':'The winning bid was too high.')+' Next round soon.';
    $('bidCount').textContent='ROUND COMPLETE';
    $('bidStatus').textContent='● EVERY DOLLAR COUNTS';
    $('stageExplainer').textContent='The true lot value has been revealed.';
@@ -166,13 +170,12 @@ function render(){
    $('gameMessage').textContent=activeMode==='find'?'SEARCHING FOR AN AVAILABLE OPPONENT…':'SHARE THE CODE ABOVE TO INVITE A FRIEND.';
  }
  if(newPhase){lastPhase=phase;lastRound=r.round}
- if(r.players.length===2&&localStream&&r.you===r.players[0].id&&!remoteEnabled){remoteEnabled=true;makeOffer()}
- if(phase==='left'){peer?.close();peer=null;voiceStatus('Opponent disconnected')}
+ if(phase==='left')notice('Opponent disconnected. Start a new match to continue.');
 }
 socket.on('state',r=>{lockedLocally=false;state=r;render()});
 function updateClock(){
  if(!state)return;
- const r=state,remaining=Math.max(0,(Number(r.endsAt)||0)-Date.now()),seconds=Math.ceil(remaining/1000),duration=r.phase==='bid'?30000:r.phase==='reveal'?6000:0;
+ const r=state,remaining=Math.max(0,(Number(r.endsAt)||0)-Date.now()),seconds=Math.ceil(remaining/1000),duration=r.phase==='bid'?24000:r.phase==='reveal'?4700:0;
  $('timer').innerHTML=(duration?String(seconds).padStart(2,'0'):'--')+'<small>s</small>';
  $('timerFill').style.width=duration?Math.max(0,Math.min(100,remaining/duration*100))+'%':'0%';
  $('timerFill').style.background=remaining<5000&&r.phase==='bid'?'#fa927b':'var(--acid)';
@@ -191,15 +194,31 @@ function bid(){
 }
 $('bidbutton').addEventListener('click',bid);
 $('amount').addEventListener('keydown',e=>{if(e.key==='Enter')bid()});
-document.querySelectorAll('[data-bid]').forEach(button=>button.addEventListener('click',()=>{
- if(!state||state.phase!=='bid'||state.leader===state.you)return;
- const cash=state.players.find(p=>p.id===state.you)?.cash||0;
+function nextGestureAmount(){
+ if(!state||state.phase!=='bid'||state.leader===state.you)return null;
+ const you=state.players.find(p=>p.id===state.you),cash=you?.cash||0;
  const minimum=state.minBid||((state.highBid||0)+100);
- if(cash<minimum){notice('You cannot afford the next bid.');return}
- const delta=button.dataset.bid==='max'?'max':Number(button.dataset.bid);
- $('amount').value=String(delta==='max'?cash:Math.min(cash,Math.max(minimum,(state.highBid||0)+delta)));
- $('amount').focus();
+ if(cash<minimum)return null;
+ return selectedRaise==='max'?cash:Math.min(cash,Math.max(minimum,(state.highBid||0)+selectedRaise));
+}
+function bidByGesture(){
+ const next=nextGestureAmount();
+ if(next===null)return false;
+ $('amount').value=String(next);
+ bid();
+ return true;
+}
+document.querySelectorAll('[data-bid]').forEach(button=>button.addEventListener('click',()=>{
+ selectedRaise=button.dataset.bid==='max'?'max':Number(button.dataset.bid);
+ document.querySelectorAll('[data-bid]').forEach(b=>b.classList.toggle('selected',b===button));
+ const next=nextGestureAmount();
+ if(next!==null)$('amount').value=String(next);
 }));
+$('appraiseBtn').addEventListener('click',()=>{
+ if(!state||state.phase!=='bid'||state.appraisal)return;
+ socket.emit('appraise');
+ notice('APPRAISAL REQUESTED · THIS COSTS '+money(state.appraisalCost||300)+' IN GAME CASH');
+});
 function sendChat(e){if(e)e.preventDefault();let v=$('chatinput').value.trim();if(!v||!state)return;socket.emit('chat',v);$('chatinput').value=''}
 $('chatForm').addEventListener('submit',sendChat);
 socket.on('chat',m=>{
@@ -216,54 +235,6 @@ function collapseChat(collapsed){
 }
 $('toggleChat').addEventListener('click',()=>collapseChat(!$('chatContent').classList.contains('hidden')));
 if(window.matchMedia('(max-width:760px)').matches)collapseChat(true);
-function voiceStatus(message){$('voiceStatus').textContent=message}
-function setupPeer(){
- if(peer||!localStream)return;
- peer=new RTCPeerConnection(rtcConfig);
- localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
- peer.onicecandidate=e=>{if(e.candidate)socket.emit('signal',{type:'candidate',payload:e.candidate})};
- peer.ontrack=e=>{$('remoteAudio').srcObject=e.streams[0];voiceStatus('Voice connected')};
- peer.onconnectionstatechange=()=>{if(peer)voiceStatus('Voice: '+peer.connectionState)};
-}
-async function makeOffer(){
- if(!localStream||!state||state.players.length!==2||state.players.some(p=>p.id==='bot'))return;
- setupPeer();if(peer.signalingState!=='stable')return;
- try{const offer=await peer.createOffer();await peer.setLocalDescription(offer);socket.emit('signal',{type:'offer',payload:peer.localDescription})}
- catch(e){voiceStatus('Could not start voice')}
-}
-async function toggleMic(){
- if(localStream){
-   localStream.getTracks().forEach(t=>t.stop());localStream=null;
-   if(peer)peer.close();peer=null;remoteEnabled=false;
-   $('mic').textContent='MIC OFF';voiceStatus('Voice disabled');return;
- }
- if(!navigator.mediaDevices?.getUserMedia){voiceStatus('Microphone not available');return}
- if(state?.players.some(p=>p.id==='bot')){voiceStatus('Voice is for multiplayer matches');return}
- try{
-   localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});
-   $('mic').textContent='MIC ON';voiceStatus('Waiting for other microphone');
-   socket.emit('voiceReady');
-   if(state?.players.length===2&&state.you===state.players[0].id)makeOffer();
- }catch(e){voiceStatus(e.name==='NotAllowedError'?'Microphone permission denied':'Could not access microphone')}
-}
-$('mic').addEventListener('click',toggleMic);
-socket.on('voiceReady',()=>{if(localStream&&state?.players.length===2&&state.you===state.players[0].id)makeOffer()});
-socket.on('signal',async data=>{
- try{
-   if(!localStream){if(data.type==='offer')voiceStatus('Rival ready — enable mic to join');return}
-   setupPeer();
-   if(data.type==='offer'){
-     await peer.setRemoteDescription(data.payload);
-     const answer=await peer.createAnswer();
-     await peer.setLocalDescription(answer);
-     socket.emit('signal',{type:'answer',payload:peer.localDescription});
-     await flushCandidates();
-   }else if(data.type==='answer'){await peer.setRemoteDescription(data.payload);await flushCandidates()}
-   else if(data.type==='candidate'){if(peer.remoteDescription)await peer.addIceCandidate(data.payload);else queuedCandidates.push(data.payload)}
- }catch(e){voiceStatus('Voice connection issue')}
-});
-async function flushCandidates(){for(const candidate of queuedCandidates)await peer.addIceCandidate(candidate);queuedCandidates=[]}
-$('mute').addEventListener('click',()=>{muted=!muted;$('remoteAudio').muted=muted;$('mute').textContent=muted?'AUDIO OFF':'AUDIO ON'});
 /* Optional membership. Payments remain off unless the owner configures Stripe. */
 async function request(url,opts){const res=await fetch(url,opts);const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');return data}
 function openPro(open){$('proBackdrop').classList.toggle('hidden',!open)}
