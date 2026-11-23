@@ -54,6 +54,17 @@ async function availablePort(){
   const opened=await joined;
   assert.equal(opened.highBid,0);
   assert.equal(opened.minBid,100);
+  assert.equal(typeof opened.lot.clue,'string','Each item has a seller clue');
+  const scanAlice=next(alice,'state',r=>r.appraisal&&r.scansRemaining===1);
+  const scanBob=next(bob,'state',r=>r.players.find(p=>p.id===alice.id)?.cash===9700);
+  alice.emit('appraise');
+  const appraised=await scanAlice,privateView=await scanBob;
+  assert.ok(appraised.appraisal.low<=appraised.appraisal.high,'Appraisal returns a range');
+  assert.equal(privateView.appraisal,null,'Appraisal result remains private');
+  const blockedScan=next(alice,'errorMessage',m=>String(m).includes('already scanned'));
+  alice.emit('appraise');await blockedScan;
+  const videoReady=next(alice,'videoReady');
+  bob.emit('videoReady');await videoReady;
 
   const aLeads=next(alice,'state',r=>r.phase==='bid'&&r.highBid===500&&r.leader===alice.id);
   alice.emit('bid',500);
@@ -86,7 +97,7 @@ async function availablePort(){
   const raised=next(solo,'state',r=>r.phase==='bid'&&r.leader===solo.id&&r.highBid===outbid.highBid+100);
   solo.emit('bid',outbid.highBid+100);
   await raised;
-  console.log('Live auction integration passed: player rebids, min raises, leader validation, bot counterbid and human counterraise.');
+  console.log('Live auction integration passed: bidding, private appraisals, video signaling, bot counterbids and human counterraises.');
  }catch(e){
   console.error('AUCTION INTEGRATION FAILED:',e.stack||e);
   if(logs)console.error('SERVER LOG:',logs.slice(-2000));
