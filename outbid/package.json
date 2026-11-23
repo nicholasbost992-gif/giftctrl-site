@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "check": "node --check server.js && node --check public/app.js",
+    "check": "node --check server.js && node --check public/app.js && node --check tests/smoke.js && node tests/smoke.js",
     "postinstall": "npm run check",
     "start": "node server.js"
   },
