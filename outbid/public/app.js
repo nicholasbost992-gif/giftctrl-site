@@ -24,13 +24,38 @@ try{$('name').value=localStorage.getItem('outbid_nickname')||''}catch(e){}
 function begin(mode,code){
  if(!socket.connected){notice('Reconnecting. Try again in a moment.');return}
  const name=nickname(); activeMode=mode;lastPhase='';lastRound=0;lockedLocally=false;
- $('home').classList.add('hidden');$('game').classList.remove('hidden');
+ $('home').classList.add('hidden');$('preflightBackdrop').classList.add('hidden');document.body.classList.remove('preflight-open');$('game').classList.remove('hidden');
  $('resultPanel').classList.add('hidden');
  $('gameMessage').textContent='CONNECTING TO THE TABLE…';
  $('chatlog').replaceChildren(); const line=document.createElement('div');line.className='system-line';line.textContent='Messages only go to this room.';$('chatlog').append(line);
  if(mode==='join')socket.emit('join',{code,name});else socket.emit(mode,name);
  window.scrollTo(0,0);
 }
+function openPreflight(mode='camera'){
+ const dialog=$('preflightBackdrop');
+ dialog.classList.remove('hidden');
+ $('preflightTitle').textContent=mode==='private'?'Private room':mode==='online'?'Ready for a 1v1?':'Camera check';
+ document.body.classList.add('preflight-open');
+ if(mode==='private')$('roomcode').focus();
+ else if(mode==='online')$('name').focus();
+ else $('lobbyCameraButton').focus();
+}
+function closePreflight(){
+ $('preflightBackdrop').classList.add('hidden');
+ document.body.classList.remove('preflight-open');
+ window.stopOutbidLobbyCamera?.();
+ $('openCameraCheck').focus();
+}
+$('openCameraCheck').addEventListener('click',()=>openPreflight());
+$('cameraCheckCard').addEventListener('click',()=>openPreflight());
+$('practiceCard').addEventListener('click',()=>$('playBot').click());
+$('playLiveCard').addEventListener('click',()=>openPreflight('online'));
+$('privateRoomCard').addEventListener('click',()=>openPreflight('private'));
+$('closePreflight').addEventListener('click',closePreflight);
+$('preflightBackdrop').addEventListener('click',e=>{if(e.target===$('preflightBackdrop'))closePreflight()});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&!$('preflightBackdrop').classList.contains('hidden'))closePreflight();
+});
 $('playOnline').addEventListener('click',()=>begin('find'));
 $('playBot').addEventListener('click',()=>begin('solo'));
 $('createRoom').addEventListener('click',()=>begin('create'));
