@@ -8,59 +8,57 @@
 <title>OUTBID — The 1v1 Auction Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css?v=4">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css?v=5">
 <script defer src="/socket.io/socket.io.js"></script>
-<script defer src="/app.js?v=4"></script>
+<script defer src="/app.js?v=5"></script>
 <script defer src="/hand-gesture.js?v=1"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
-<script defer src="/video.js?v=1"></script>
+<script defer src="/video.js?v=2"></script>
 </head>
 <body>
-<div class="noise" aria-hidden="true"></div>
-<header class="topbar">
-  <div class="topbar-inner">
-    <a class="wordmark" href="/" aria-label="OUTBID homepage"><span class="logo-square">O<span class="logo-dot">.</span></span><span>OUTBID<span class="wordmark-dot">.</span></span></a>
-    <div class="nav-center"><span class="nav-pulse"></span><span>HEAD-TO-HEAD AUCTIONS</span></div>
-    <div class="nav-actions"><button id="musicToggle" class="nav-tool" type="button" aria-pressed="false" title="Toggle music"><span id="soundIcon">♪</span><span id="soundText">SOUND OFF</span></button><button id="proNav" class="nav-tool pro-link" type="button">PRO <span class="pro-star">✳</span></button></div>
-  </div>
-</header>
+
+<header class="topbar"><div class="topbar-inner">
+  <a class="wordmark" href="/" aria-label="Outbid home"><span class="wordmark-mark">o.</span><span>outbid</span></a>
+  <div class="nav-actions"><button id="musicToggle" class="nav-tool" type="button" aria-pressed="false"><span id="soundIcon">♪</span><span id="soundText">Sound off</span></button><button id="proNav" class="nav-tool" type="button">Pro</button></div>
+</div></header>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <main class="shell">
 <section id="home" class="home">
-  <div class="left-rail">
-    <div class="home-topline"><span class="eyetag"><span class="signal"></span> WELCOME TO THE TABLE</span><span class="edition">001 — THE ORIGINAL</span></div>
-    <div class="headline-block">
-      <div class="superheading">THE INTERNET'S NEW</div>
-      <h1>LOOK.<br><span>RAISE.</span> WIN.</h1>
-      <p class="tagline">Two faces. Five lots. Real-time bids.<br>Raise your hand. Steal the deal.</p>
-    </div>
-    <div class="home-controls">
-      <div class="mode-header"><span>LET'S PLAY</span><span class="rule-line"></span><span>01 / 02</span></div>
-      <div class="field-name"><label for="name">YOUR NICKNAME</label><span>18 CHARACTERS MAX</span></div>
-      <input id="name" class="name-input" name="nickname" placeholder="Enter a name" maxlength="18" autocomplete="nickname" value="">
-      <div class="mode-list">
-        <button id="playOnline" class="mode primary-mode" type="button"><span class="mode-left"><span class="mode-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h16"/><path d="m17 9 3 3-3 3"/></svg></span><span><strong>FIND AN OPPONENT</strong><small>Live video auction with a real rival</small></span></span><span class="mode-chevron">↗</span></button>
-        <button id="playBot" class="mode secondary-mode" type="button"><span class="mode-left"><span class="mode-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9 16h6"/></svg></span><span><strong>PLAY AGAINST BOT</strong><small>Try hand bidding against the bot</small></span></span><span class="mode-chevron">↗</span></button>
+  <div class="lobby-intro">
+    <div class="lobby-eyebrow"><span class="online-indicator"></span> Live 1v1 auctions</div>
+    <h1>Play Outbid.</h1>
+    <p>Face another player, bid on mystery items, and raise your hand to win.</p>
+  </div>
+  <div class="lobby-grid">
+    <div class="lobby-camera-panel">
+      <div class="lobby-preview" id="lobbyPreviewStage">
+        <video id="lobbyVideo" autoplay muted playsinline class="hidden"></video>
+        <div class="lobby-camera-empty" id="lobbyVideoPlaceholder">
+          <div class="lobby-camera-icon"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="5" width="17" height="14" rx="3"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <strong>Your camera is off</strong>
+          <span>Preview yourself before you join</span>
+        </div>
+        <span class="lobby-preview-label">You</span>
       </div>
-      <div class="private-row"><button id="createRoom" type="button">+ CREATE PRIVATE ROOM</button><span class="private-divider">OR</span><div class="private-join"><input id="roomcode" maxlength="6" aria-label="Six digit room code" placeholder="ROOM CODE" autocomplete="off" spellcheck="false"><button id="joinRoom" type="button" aria-label="Join private room">JOIN ↗</button></div></div>
+      <div class="lobby-preview-tools">
+        <div><strong>Camera preview</strong><span id="lobbyCameraStatus">Only turns on when you choose</span></div>
+        <button id="lobbyCameraButton" type="button">Enable camera</button>
+      </div>
     </div>
-    <div class="home-foot"><span><i class="tiny-square"></i> NO SIGN UP</span><span><i class="tiny-square"></i> 100% FREE</span><span><i class="tiny-square"></i> LIVE MULTIPLAYER</span></div>
+    <div class="lobby-join-panel">
+      <div class="join-heading"><h2>Join a game</h2><span>5 rounds · $10k starting cash</span></div>
+      <label for="name" class="join-label">Your name</label>
+      <input id="name" class="join-input" name="nickname" placeholder="Enter a nickname" maxlength="18" autocomplete="nickname">
+      <button id="playOnline" class="join-main" type="button"><span>Start 1v1</span><span aria-hidden="true">→</span></button>
+      <p class="match-caption">Find a random player to auction against.</p>
+      <div class="join-divider"><span>Other ways to play</span></div>
+      <button id="playBot" class="join-option" type="button"><span>Practice against bot</span><span aria-hidden="true">→</span></button>
+      <button id="createRoom" class="join-option" type="button"><span>Create private match</span><span aria-hidden="true">→</span></button>
+      <div class="join-code"><input id="roomcode" maxlength="6" aria-label="Private match room code" placeholder="6-character room code" autocomplete="off" spellcheck="false"><button id="joinRoom" type="button">Join</button></div>
+    </div>
   </div>
-  <div class="right-rail">
-    <div class="showcase-topline"><span><i class="indicator"></i> AT THE AUCTION TABLE</span><span class="showcase-num">ROUND 01/05</span></div>
-    <div class="duel-visual">
-      <div class="duel-player"><div class="duel-avatar you-avatar">YOU</div><span>YOU</span><b>$10,000</b></div>
-      <div class="duel-vs">VS<span class="vs-spark">✳</span></div>
-      <div class="duel-player"><div class="duel-avatar rival-avatar">?</div><span>RIVAL</span><b>$10,000</b></div>
-    </div>
-    <div class="lot-preview">
-      <div class="lot-top"><span>THE NEXT LOT</span><span class="lot-tag">VALUE UNKNOWN</span></div>
-      <div class="preview-photo"><img alt="Luxury wristwatch auction preview" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85" onerror="this.style.display='none';this.parentNode.classList.add('fallback-image')"></div>
-      <div class="photo-footer"><div><span>LOT #001</span><strong>WHAT'S IT WORTH?</strong></div><div class="photo-stamp">?</div></div>
-    </div>
-    <div class="showcase-bottom"><span>VIDEO ON. HANDS UP. BIDS LIVE.</span><span>⟶</span></div>
-  </div>
+  <p class="lobby-disclaimer">Camera and mic are optional. Only switch them on when you're comfortable being seen or heard. Others can record video calls.</p>
 </section>
 <section id="game" class="game video-game hidden" aria-label="Live video auction">
   <div class="game-toolbar">
@@ -75,31 +73,31 @@
   <div class="game-grid video-layout">
     <div class="main-camera-column">
       <div class="video-arena">
-        <div class="video-arena-header"><span><i class="video-live"></i> THE FACE-TO-FACE TABLE</span><span id="connectionLabel">CAMERAS OFF</span></div>
+        <div class="video-arena-header"><span><i class="video-live"></i> Live video</span><span id="connectionLabel">CAMERAS OFF</span></div>
         <div class="video-pair">
           <div class="video-tile local-tile">
             <video id="localVideo" autoplay muted playsinline></video>
-            <div id="localPlaceholder" class="tile-placeholder"><span class="placeholder-camera">◉</span><strong>YOU</strong><small>YOUR CAMERA IS OFF</small></div>
+            <div id="localPlaceholder" class="tile-placeholder"><span class="placeholder-camera">◉</span><strong>YOU</strong><small>Camera off</small></div>
             <div class="tile-banner"><span>YOU <i id="yourCameraBadge">· OFFLINE</i></span><strong id="localBidBadge">READY TO BID</strong></div>
           </div>
           <div class="video-tile remote-tile">
             <video id="remoteVideo" autoplay playsinline></video>
-            <div id="remotePlaceholder" class="tile-placeholder"><span id="remotePlaceholderSymbol" class="placeholder-camera">?</span><strong id="rivalPlaceholderName">RIVAL</strong><small id="rivalPlaceholderStatus">WAITING FOR CAMERA</small></div>
+            <div id="remotePlaceholder" class="tile-placeholder"><span id="remotePlaceholderSymbol" class="placeholder-camera">?</span><strong id="rivalPlaceholderName">RIVAL</strong><small id="rivalPlaceholderStatus">Waiting for camera</small></div>
             <div class="tile-banner"><span>RIVAL <i id="rivalCameraBadge">· OFFLINE</i></span><strong id="rivalBidBadge">—</strong></div>
           </div>
           <span class="camera-versus" aria-hidden="true">VS</span>
         </div>
         <div class="gesture-callout">
           <div class="gesture-icon" aria-hidden="true">✋</div>
-          <div class="gesture-copy"><strong id="handHint">RAISE YOUR OPEN HAND TO BID</strong><span id="handState">Enable your camera, then hold your palm up for a second.</span></div>
+          <div class="gesture-copy"><strong id="handHint">Hold your hand up to bid</strong><span id="handState">Enable your camera, then hold your palm up for a second.</span></div>
           <div id="gestureCircle" class="gesture-circle"><div id="gestureProgress"></div></div>
         </div>
         <div class="camera-toolbar">
-          <button id="startCamera" class="camera-primary" type="button">◉ ENABLE VIDEO + MIC</button>
+          <button id="startCamera" class="camera-primary" type="button">Enable video + mic</button>
           <button id="camToggle" class="camera-button hidden" type="button">CAM ON</button>
           <button id="mic" class="camera-button hidden" type="button">MIC ON</button>
-          <button id="mute" class="camera-button hidden" type="button">SOUND ON</button>
-          <button id="handToggle" class="camera-button" type="button">HAND BIDS OFF</button>
+          <button id="mute" class="camera-button hidden" type="button">Sound on</button>
+          <button id="handToggle" class="camera-button" type="button">Hand bids off</button>
         </div>
         <p id="voiceStatus" class="camera-status">Video is optional. You choose when to share your camera and mic. OUTBID does not record calls.</p>
       </div>
@@ -120,24 +118,24 @@
         <div id="resultPanel" class="result-panel hidden" aria-live="polite"><span id="resultLabel">SOLD!</span><strong id="resultValue">$0</strong><p id="resultDetail"></p></div>
       </section>
       <div class="action-card" id="bidCard">
-        <div class="action-title"><span>LIVE BIDDING</span><span id="bidCount">0 BIDS</span></div>
-        <div class="live-bid-ribbon" aria-live="polite"><div><small>HIGHEST BID</small><strong id="highestBid">$0</strong></div><div><small>LEADING</small><strong id="bidLeader">NO BIDS YET</strong></div></div>
+        <div class="action-title"><span>Live bidding</span><span id="bidCount">0 BIDS</span></div>
+        <div class="live-bid-ribbon" aria-live="polite"><div><small>Highest bid</small><strong id="highestBid">$0</strong></div><div><small>Leading</small><strong id="bidLeader">NO BIDS YET</strong></div></div>
         <div class="bid-action-heading"><h2 id="actionHeading">Raise your hand<span>.</span></h2><p id="actionHelp">Raise your open palm on camera or use the bid button.</p></div>
-        <div class="input-label"><label for="amount">YOUR NEXT BID</label><span id="yourCashHint">AVAILABLE $10,000</span></div>
+        <div class="input-label"><label for="amount">Your next bid</label><span id="yourCashHint">AVAILABLE $10,000</span></div>
         <div class="bid-input-wrap"><span>$</span><input id="amount" type="number" min="100" max="10000" step="100" inputmode="numeric" placeholder="100" autocomplete="off"></div>
         <div class="quick-bids"><button type="button" data-bid="100" class="selected">+ $100</button><button type="button" data-bid="500">+ $500</button><button type="button" data-bid="1000">+ $1K</button><button type="button" data-bid="max">ALL IN</button></div>
         <button id="bidbutton" class="submit-bid" type="button">BID WITH BUTTON <span>→</span></button>
-        <div class="scan-bar"><div><strong>NEED A HINT?</strong><span id="appraisalResult">2 scans per match · $300 each</span></div><button id="appraiseBtn" type="button">APPRAISE ↗</button></div>
+        <div class="scan-bar"><div><strong>Need a hint?</strong><span id="appraisalResult">2 scans per match · $300 each</span></div><button id="appraiseBtn" type="button">Appraise</button></div>
         <div id="bidStatus" class="bid-status">● KEEP YOUR HAND DOWN BETWEEN BIDS</div>
       </div>
     </div>
   </div>
-  <div class="game-footer"><span id="gameMessage">THE TABLE IS READY.</span><button type="button" id="newMatch">NEW MATCH ↗</button></div>
+  <div class="game-footer"><span id="gameMessage">Ready for the next round</span><button type="button" id="newMatch">NEW MATCH ↗</button></div>
 </section>
 <div class="modal-backdrop hidden" id="proBackdrop">
   <section id="proPanel" class="pro-dialog" role="dialog" aria-modal="true" aria-labelledby="proTitle">
     <button id="closePro" class="modal-close" type="button" aria-label="Close">×</button>
-    <span class="modal-kicker">OUTBID / MEMBERSHIP</span><h2 id="proTitle">THE INNER CIRCLE<span>.</span></h2>
+    <span class="modal-kicker">OUTBID / MEMBERSHIP</span><h2 id="proTitle">Outbid Pro<span>.</span></h2>
     <p>Support the game and unlock cosmetic profile flair when membership becomes available. Winning still comes down to your bids.</p>
     <div class="pro-price">$4.99 <span>/ MONTH · PLANNED</span></div>
     <p id="proStatus" class="pro-status">Checking membership availability…</p>
