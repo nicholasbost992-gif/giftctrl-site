@@ -20,7 +20,7 @@ function updateCameraControls(){
  $('lobbyVideo').classList.toggle('hidden',!active||!localCameraEnabled);
  $('lobbyVideoPlaceholder').classList.toggle('hidden',active&&localCameraEnabled);
  $('lobbyCameraButton').textContent=active?'Turn off camera':'Enable camera + mic';
- $('lobbyCameraStatus').textContent=active?(localCameraEnabled?'Preview on · mic '+(localMicEnabled?'on':'off'):'Camera disabled'):'Only turns on when you choose';
+ $('lobbyCameraStatus').textContent=active?(localCameraEnabled?'Preview on · mic '+(localMicEnabled?'on':'off'):'Camera disabled'):/TikTok|musical_ly|Bytedance/i.test(navigator.userAgent)?'Use Safari if the camera is blocked':'Only turns on when you choose';
  $('startCamera').classList.toggle('hidden',active);
  $('camToggle').classList.toggle('hidden',!active);
  $('mic').classList.toggle('hidden',!active);
