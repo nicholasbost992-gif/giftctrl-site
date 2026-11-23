@@ -25,4 +25,10 @@ assert(server.includes('express.static'),'Server is not serving frontend files')
 assert(server.includes("app.get('/health'"),'Health endpoint missing');
 for(const id of ['lobbyVideo','lobbyVideoPlaceholder','lobbyCameraButton','lobbyCameraStatus'])assert(unique.has(id),'Missing lobby camera preview: '+id);
 assert(!html.includes('LOOK.<br>'),'Old billboard-style homepage should be removed');
+for(const id of ['openCameraCheck','cameraCheckCard','practiceCard','playLiveCard','privateRoomCard','preflightBackdrop','closePreflight'])assert(unique.has(id),'Missing homepage navigation: '+id);
+assert(html.includes('ENTER THE ROOM'),'New homepage hero missing');
+assert(html.includes('START CAMERA CHECK'),'New camera-check CTA missing');
+assert(js.includes('openPreflight'),'Camera-check interaction missing');
+assert(css.includes('.arena-feature-card'),'Arena homepage styling missing');
+
 console.log('OUTBID smoke checks passed: '+ids.length+' elements and '+refs.length+' UI references verified.');
