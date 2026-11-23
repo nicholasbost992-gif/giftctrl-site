@@ -1,14 +1,35 @@
 /* OUTBID ORIGINAL SOUNDTRACK + AUCTION SOUND EFFECTS
    Generated from original synthesis patterns; no external audio or copyrighted samples.
-   Music and effects are independently switchable, and never auto-play on page load.
+   Music is enabled by default and starts on the first user interaction, as browsers require.
 */
 'use strict';
 let audioCtx=null,musicOn=false,musicTimer=null,musicBus=null,fxBus=null,step=0,nextBeatAt=0;
-let sfxOn=true,volume=.65,musicDucked=false;
-try{sfxOn=localStorage.getItem('outbid_sfx')!=='off'}catch(e){}
+let sfxOn=true,volume=.65,musicDucked=false,musicWanted=true,captureAudio=false;
+try{
+ sfxOn=localStorage.getItem('outbid_sfx')!=='off';
+ // Explicitly choosing Music off persists between visits; otherwise it starts on the first tap.
+ musicWanted=localStorage.getItem('outbid_music')!=='off';
+}catch(e){}
+function setIOSAudioSession(){
+ // Safari's playback category normally plays through the Ring/Silent switch.
+ // When capturing mic audio, use the capture-compatible category instead.
+ try{
+  if(navigator.audioSession){
+   navigator.audioSession.type=captureAudio?'play-and-record':'playback';
+  }
+ }catch(e){}
+}
+function setAudioCaptureMode(on){
+ captureAudio=!!on;
+ setIOSAudioSession();
+ if(audioCtx&&musicWanted&&audioCtx.state!=='running'&&audioCtx.state!=='closed'){
+  audioCtx.resume().catch(()=>{});
+ }
+}
 const BPM=114,STEP_SECONDS=60/BPM/4;
 function audioReady(){
  if(audioCtx)return audioCtx;
+ setIOSAudioSession();
  const AudioCtor=window.AudioContext||window.webkitAudioContext;
  if(!AudioCtor)return null;
  audioCtx=new AudioCtor();
@@ -27,11 +48,44 @@ function syncAudioGains(){
  fxBus.gain.setTargetAtTime(sfxOn?.52:0,t,.04);
 }
 function setMusicDucking(ducked){musicDucked=!!ducked;syncAudioGains()}
-function audioUnlock(){
- try{const c=audioReady();if(c&&c.state!=='running')c.resume().catch(()=>{})}catch(e){}
+function startWantedMusic(){
+ if(!musicWanted)return;
+ setIOSAudioSession();
+ try{
+  const c=audioReady();if(!c)return;
+  if(!musicOn){
+   musicOn=true;
+   step=0;nextBeatAt=c.currentTime+.045;
+   if(musicTimer!==null)clearInterval(musicTimer);
+   musicTimer=setInterval(scheduler,55);
+   syncAudioGains();syncAudioControls();
+  }
+  // resume() must be invoked synchronously inside the player's first tap.
+  if(c.state!=='running'&&c.state!=='closed')c.resume().then(()=>scheduler()).catch(()=>{});
+  else scheduler();
+ }catch(e){}
 }
-document.addEventListener('pointerdown',audioUnlock,{passive:true});
-document.addEventListener('keydown',audioUnlock);
+function audioUnlock(event){
+ // Sound toggles handle their own first tap; don't turn music on then immediately off.
+ if(event?.target?.closest?.('#musicToggle, #homeSoundButton, #gameSoundButton'))return;
+ setIOSAudioSession();
+ if(musicWanted){startWantedMusic();return}
+ try{
+  const c=audioReady();
+  if(c&&c.state!=='running'&&c.state!=='closed')c.resume().catch(()=>{});
+ }catch(e){}
+}
+// No unsolicited audio before user input. On iPhone the gesture may be touchend or click.
+document.addEventListener('pointerdown',audioUnlock,{capture:true,passive:true});
+document.addEventListener('touchend',audioUnlock,{capture:true,passive:true});
+document.addEventListener('click',audioUnlock,true);
+document.addEventListener('keydown',audioUnlock,true);
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='visible'&&musicWanted&&musicOn){
+  setIOSAudioSession();
+  if(audioCtx&&audioCtx.state!=='running'&&audioCtx.state!=='closed')audioCtx.resume().catch(()=>{});
+ }
+});
 function osc(freq,time,duration,level,type='sine',dest=musicBus,cutoff=0){
  if(!audioCtx||!dest)return;
  const o=audioCtx.createOscillator(),v=audioCtx.createGain();
@@ -92,7 +146,7 @@ function playStep(index,t){
  if(beat===15&&bar%4===3)noise(t,.18,.035,2500);
 }
 function scheduler(){
- if(!musicOn||!audioCtx||audioCtx.state!=='running')return;
+ if(!musicOn||!audioCtx||audioCtx.state!=='running'||document.visibilityState==='hidden')return;
  if(nextBeatAt<audioCtx.currentTime-.25)nextBeatAt=audioCtx.currentTime+.03;
  while(nextBeatAt<audioCtx.currentTime+.20){
   playStep(step,nextBeatAt);
@@ -101,22 +155,25 @@ function scheduler(){
 }
 function syncAudioControls(){
  const menu=$('musicToggle'),quick=$('gameSoundButton'),home=$('homeSoundButton'),sfx=$('effectsToggle'),slider=$('musicVolume');
- if(menu){menu.setAttribute('aria-pressed',String(musicOn));$('soundText').textContent=musicOn?'Music on':'Music off';$('soundIcon').textContent=musicOn?'♫':'♪'}
- if(quick){quick.textContent=musicOn?'♫ Music on':'♪ Music off';quick.setAttribute('aria-pressed',String(musicOn))}
- if(home){home.textContent=musicOn?'♫ Soundtrack on':'♪ Play soundtrack';home.setAttribute('aria-pressed',String(musicOn))}
+ if(menu){menu.setAttribute('aria-pressed',String(musicWanted));$('soundText').textContent=musicWanted?'Music on':'Music off';$('soundIcon').textContent=musicWanted?'♫':'♪'}
+ if(quick){quick.textContent=musicWanted?'♫ Music on':'♪ Music off';quick.setAttribute('aria-pressed',String(musicWanted))}
+ if(home){home.textContent=musicWanted?'♫ Soundtrack on':'♪ Play soundtrack';home.setAttribute('aria-pressed',String(musicWanted))}
  if(sfx){sfx.textContent=sfxOn?'Sound effects on':'Sound effects off';sfx.setAttribute('aria-pressed',String(sfxOn))}
  if(slider)slider.value=String(Math.round(volume*100));
 }
-async function toggleMusic(){
- try{
-  const c=audioReady();if(!c){notice('Your browser does not support audio.');return}
-  await c.resume();
-  musicOn=!musicOn;
-  if(musicOn){step=0;nextBeatAt=c.currentTime+.04;scheduler();musicTimer=setInterval(scheduler,55)}
-  else{clearInterval(musicTimer);musicTimer=null}
-  syncAudioGains();syncAudioControls();
-  notice(musicOn?'Soundtrack on':'Soundtrack off');
- }catch(e){notice('Audio could not be enabled in this browser.')}
+function toggleMusic(){
+ musicWanted=!musicWanted;
+ try{localStorage.setItem('outbid_music',musicWanted?'on':'off')}catch(e){}
+ if(musicWanted){
+  startWantedMusic();
+  notice('Music on');
+ }else{
+  musicOn=false;
+  if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null}
+  syncAudioGains();
+  notice('Music off');
+ }
+ syncAudioControls();
 }
 function toggleEffects(){
  sfxOn=!sfxOn;try{localStorage.setItem('outbid_sfx',sfxOn?'on':'off')}catch(e){}
@@ -166,6 +223,7 @@ function playGameSfx(kind){
 // Legacy calls from game code use a short confirmation chime; keep compatibility.
 function playAccent(){playGameSfx('click')}
 document.addEventListener('DOMContentLoaded',()=>{
+setIOSAudioSession();
 $('musicToggle').addEventListener('click',toggleMusic);
 $('effectsToggle').addEventListener('click',toggleEffects);
 $('musicVolume').addEventListener('input',e=>{volume=Math.max(0,Math.min(1,Number(e.target.value)/100));syncAudioGains();syncAudioControls()});
